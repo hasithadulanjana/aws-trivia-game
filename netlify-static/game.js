@@ -225,13 +225,13 @@ class StaticTriviaGame {
         // Show score message
         let message = '';
         if (percentage >= 90) {
-            message = `🏆 Excellent work, ${this.playerName}! You're an AWS expert!`;
+            message = `🏆 Excellent work, ${this.playerName}! You're an AWS expert! Thanks for participating in the AWS Community Challenge!`;
         } else if (percentage >= 70) {
-            message = `👏 Great job, ${this.playerName}! You have solid AWS knowledge!`;
+            message = `👏 Great job, ${this.playerName}! You have solid AWS knowledge! Keep learning with the AWS Community!`;
         } else if (percentage >= 50) {
-            message = `👍 Good effort, ${this.playerName}! Keep learning about AWS!`;
+            message = `👍 Good effort, ${this.playerName}! Keep learning about AWS with the community!`;
         } else {
-            message = `📚 Keep studying, ${this.playerName}! AWS has lots to learn!`;
+            message = `📚 Keep studying, ${this.playerName}! AWS has lots to learn - join the AWS Community for more resources!`;
         }
         
         document.getElementById('scoreMessage').textContent = message;

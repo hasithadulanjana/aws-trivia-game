@@ -2,6 +2,8 @@
 
 A comprehensive multiplayer trivia game focused on AWS (Amazon Web Services) knowledge, built with Python. Features both **terminal/GUI clients** and a **modern web interface** with real-time multiplayer support.
 
+*Created in 2025 as part of the [AWS Community Challenge: Build Games with Amazon Q CLI](https://community.aws/content/2xIoduO0xhkhUApQpVUIqBFGmAc/build-games-with-amazon-q-cli-and-score-a-t-shirt?lang=en)*
+
 ## 🌟 **Multiple Ways to Play**
 
 ### 🌐 **Web Version (Recommended)**
@@ -279,4 +281,6 @@ Choose your preferred way to play:
 
 ---
 
-*Built with ❤️ for the AWS community. Happy learning!*
+*Built with ❤️ for the AWS community in 2025. Happy learning!*
+
+*Created as part of the [AWS Community Challenge: Build Games with Amazon Q CLI](https://community.aws/content/2xIoduO0xhkhUApQpVUIqBFGmAc/build-games-with-amazon-q-cli-and-score-a-t-shirt?lang=en)*
