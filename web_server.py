@@ -336,6 +336,11 @@ def game_page():
     """Game interface page"""
     return render_template('game.html')
 
+@app.route('/shooter')
+def interactive_game_page():
+    """Interactive shooter game page"""
+    return render_template('interactive_game.html')
+
 @socketio.on('connect')
 def handle_connect():
     """Handle client connection"""

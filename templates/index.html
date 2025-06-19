@@ -37,12 +37,39 @@
                                placeholder="Your nickname" maxlength="20" required>
                         <div class="form-text">Choose a unique nickname (max 20 characters)</div>
                     </div>
-                    <div class="d-grid">
+                    <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-play"></i> Join Game
+                            <i class="fas fa-play"></i> Join Multiplayer Game
                         </button>
+                        <a href="/shooter" class="btn btn-success btn-lg">
+                            <i class="fas fa-crosshairs"></i> Play Interactive Shooter
+                        </a>
                     </div>
                 </form>
+
+                <!-- Game Mode Info -->
+                <div class="mt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Multiplayer Mode</h6>
+                                    <p class="card-text small">Real-time trivia with up to 10 players. Answer questions together and compete for the top score!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-crosshairs fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Interactive Shooter</h6>
+                                    <p class="card-text small">Action-packed single-player mode! Control a spaceship and shoot the correct answers to AWS questions!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="connectionStatus" class="mt-3 text-center" style="display: none;">
                     <div class="spinner-border text-primary" role="status">
