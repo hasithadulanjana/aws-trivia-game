@@ -414,6 +414,40 @@ class TriviaGameClient {
         
         // Update final leaderboard
         this.updateLeaderboard({ leaderboard: data.final_scores });
+        
+        // Prepare player data for social sharing
+        const playerData = this.calculatePlayerStats(data);
+        this.displayGameResults(playerData);
+    }
+    
+    calculatePlayerStats(gameData) {
+        // Find current player's stats from the final scores
+        const playerStats = gameData.final_scores.find(player => player.nickname === this.nickname);
+        
+        if (!playerStats) {
+            return {
+                score: 0,
+                correct: 0,
+                total: gameData.total_questions || 10,
+                accuracy: 0,
+                rank: gameData.final_scores.length,
+                totalPlayers: gameData.final_scores.length
+            };
+        }
+        
+        const total = gameData.total_questions || 10;
+        const correct = playerStats.correct_answers || 0;
+        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+        const rank = gameData.final_scores.findIndex(player => player.nickname === this.nickname) + 1;
+        
+        return {
+            score: playerStats.score || 0,
+            correct: correct,
+            total: total,
+            accuracy: accuracy,
+            rank: rank,
+            totalPlayers: gameData.final_scores.length
+        };
     }
     
     resetForNewGame() {
@@ -620,6 +654,236 @@ class TriviaGameClient {
             }
         }, duration);
     }
+    
+    // Social Sharing Functionality
+    initializeSocialSharing() {
+        // Add event listeners for social sharing buttons
+        const shareLinkedIn = document.getElementById('shareLinkedIn');
+        const shareFacebook = document.getElementById('shareFacebook');
+        const shareTwitter = document.getElementById('shareTwitter');
+        const shareWhatsApp = document.getElementById('shareWhatsApp');
+        const shareEmail = document.getElementById('shareEmail');
+        const shareReddit = document.getElementById('shareReddit');
+        const shareTelegram = document.getElementById('shareTelegram');
+        const copyGameLink = document.getElementById('copyGameLink');
+        
+        if (shareLinkedIn) shareLinkedIn.addEventListener('click', () => this.shareOnLinkedIn());
+        if (shareFacebook) shareFacebook.addEventListener('click', () => this.shareOnFacebook());
+        if (shareTwitter) shareTwitter.addEventListener('click', () => this.shareOnTwitter());
+        if (shareWhatsApp) shareWhatsApp.addEventListener('click', () => this.shareOnWhatsApp());
+        if (shareEmail) shareEmail.addEventListener('click', () => this.shareViaEmail());
+        if (shareReddit) shareReddit.addEventListener('click', () => this.shareOnReddit());
+        if (shareTelegram) shareTelegram.addEventListener('click', () => this.shareOnTelegram());
+        if (copyGameLink) copyGameLink.addEventListener('click', () => this.copyGameLink());
+    }
+    
+    generateShareText(playerData) {
+        const { score, correct, total, accuracy, rank, totalPlayers } = playerData;
+        const gameUrl = window.location.origin;
+        
+        // Generate achievement badge text
+        let achievement = '';
+        if (accuracy >= 90) {
+            achievement = '🏆 AWS Expert';
+        } else if (accuracy >= 75) {
+            achievement = '⭐ AWS Professional';
+        } else if (accuracy >= 60) {
+            achievement = '📚 AWS Learner';
+        } else {
+            achievement = '🚀 AWS Explorer';
+        }
+        
+        // Generate rank text
+        let rankText = '';
+        if (totalPlayers > 1) {
+            if (rank === 1) {
+                rankText = `🥇 Ranked #${rank} out of ${totalPlayers} players!`;
+            } else if (rank === 2) {
+                rankText = `🥈 Ranked #${rank} out of ${totalPlayers} players!`;
+            } else if (rank === 3) {
+                rankText = `🥉 Ranked #${rank} out of ${totalPlayers} players!`;
+            } else {
+                rankText = `Ranked #${rank} out of ${totalPlayers} players`;
+            }
+        }
+        
+        const shareText = `🎮 Just completed the AWS Trivia Game! ${achievement}
+        
+📊 My Results:
+• Score: ${score} points
+• Correct Answers: ${correct}/${total}
+• Accuracy: ${accuracy}%
+${rankText ? '• ' + rankText : ''}
+
+Test your AWS knowledge too! 🚀
+${gameUrl}
+
+#AWS #CloudComputing #TriviaGame #AWSCommunity #TechSkills`;
+        
+        return shareText;
+    }
+    
+    updateShareText(playerData) {
+        const shareTextElement = document.getElementById('shareText');
+        if (shareTextElement) {
+            shareTextElement.value = this.generateShareText(playerData);
+        }
+    }
+    
+    shareOnLinkedIn() {
+        const shareText = document.getElementById('shareText').value;
+        const gameUrl = window.location.origin;
+        
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(gameUrl)}&summary=${encodeURIComponent(shareText)}`;
+        
+        this.openShareWindow(linkedInUrl, 'LinkedIn');
+    }
+    
+    shareOnFacebook() {
+        const gameUrl = window.location.origin;
+        const shareText = document.getElementById('shareText').value;
+        
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(gameUrl)}&quote=${encodeURIComponent(shareText)}`;
+        
+        this.openShareWindow(facebookUrl, 'Facebook');
+    }
+    
+    shareOnTwitter() {
+        const shareText = document.getElementById('shareText').value;
+        const gameUrl = window.location.origin;
+        
+        // Twitter has character limits, so create a shorter version
+        const twitterText = shareText.substring(0, 240) + '...\n' + gameUrl;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`;
+        
+        this.openShareWindow(twitterUrl, 'Twitter');
+    }
+    
+    shareOnWhatsApp() {
+        const shareText = document.getElementById('shareText').value;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+        
+        this.openShareWindow(whatsappUrl, 'WhatsApp');
+    }
+    
+    shareViaEmail() {
+        const shareText = document.getElementById('shareText').value;
+        const gameUrl = window.location.origin;
+        
+        const subject = '🎮 Check out my AWS Trivia Game results!';
+        const body = shareText.replace(/\n/g, '%0D%0A');
+        
+        const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        window.location.href = emailUrl;
+    }
+    
+    shareOnReddit() {
+        const shareText = document.getElementById('shareText').value;
+        const gameUrl = window.location.origin;
+        
+        const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(gameUrl)}&title=${encodeURIComponent('🎮 Just completed the AWS Trivia Game!')}&text=${encodeURIComponent(shareText)}`;
+        
+        this.openShareWindow(redditUrl, 'Reddit');
+    }
+    
+    shareOnTelegram() {
+        const shareText = document.getElementById('shareText').value;
+        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(shareText)}`;
+        
+        this.openShareWindow(telegramUrl, 'Telegram');
+    }
+    
+    copyGameLink() {
+        const gameUrl = window.location.origin;
+        
+        navigator.clipboard.writeText(gameUrl).then(() => {
+            const btn = document.getElementById('copyGameLink');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('copy-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('copy-success');
+            }, 2000);
+            
+            this.showTemporaryMessage('Game link copied to clipboard!', 'success', 2000);
+        }).catch(() => {
+            // Fallback for browsers that don't support clipboard API
+            const textArea = document.createElement('textarea');
+            textArea.value = gameUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            this.showTemporaryMessage('Game link copied to clipboard!', 'success', 2000);
+        });
+    }
+    
+    openShareWindow(url, platform) {
+        const width = 600;
+        const height = 400;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        
+        const popup = window.open(
+            url,
+            `share-${platform}`,
+            `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+        );
+        
+        if (popup) {
+            popup.focus();
+            this.showTemporaryMessage(`Opening ${platform} share dialog...`, 'info', 2000);
+        } else {
+            // Fallback if popup is blocked
+            window.open(url, '_blank');
+        }
+    }
+    
+    displayGameResults(gameData) {
+        // Update final score display
+        const finalScoreElement = document.getElementById('finalScore');
+        const correctAnswersElement = document.getElementById('correctAnswers');
+        const accuracyRateElement = document.getElementById('accuracyRate');
+        
+        if (finalScoreElement) finalScoreElement.textContent = gameData.score || 0;
+        if (correctAnswersElement) correctAnswersElement.textContent = gameData.correct || 0;
+        if (accuracyRateElement) accuracyRateElement.textContent = `${gameData.accuracy || 0}%`;
+        
+        // Initialize social sharing with player data
+        this.initializeSocialSharing();
+        this.updateShareText(gameData);
+        
+        // Add achievement badge if high score
+        if (gameData.accuracy >= 90) {
+            this.addAchievementBadge('🏆 AWS Expert!', 'achievement-excellent');
+        } else if (gameData.accuracy >= 75) {
+            this.addAchievementBadge('⭐ AWS Professional!', 'achievement-good');
+        } else if (gameData.accuracy >= 60) {
+            this.addAchievementBadge('📚 AWS Learner!', 'achievement-average');
+        }
+    }
+    
+    addAchievementBadge(text, className) {
+        const gameOverArea = document.getElementById('gameOverArea');
+        const cardBody = gameOverArea.querySelector('.card-body');
+        
+        // Check if badge already exists
+        if (cardBody.querySelector('.achievement-badge')) return;
+        
+        const badge = document.createElement('div');
+        badge.className = `achievement-badge ${className}`;
+        badge.textContent = text;
+        
+        // Insert after the winner text
+        const winnerText = document.getElementById('winnerText');
+        winnerText.parentNode.insertBefore(badge, winnerText.nextSibling);
+    }
+}
 }
 }
 
@@ -627,3 +891,42 @@ class TriviaGameClient {
 document.addEventListener('DOMContentLoaded', () => {
     new TriviaGameClient();
 });
+
+// Global function for copying share text (called from HTML onclick)
+function copyShareText() {
+    const shareTextElement = document.getElementById('shareText');
+    if (shareTextElement) {
+        shareTextElement.select();
+        shareTextElement.setSelectionRange(0, 99999); // For mobile devices
+        
+        navigator.clipboard.writeText(shareTextElement.value).then(() => {
+            // Visual feedback
+            shareTextElement.classList.add('copy-success');
+            
+            // Show temporary message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show mt-2';
+            alert.innerHTML = `
+                <i class="fas fa-check"></i> Share text copied to clipboard!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            shareTextElement.parentNode.appendChild(alert);
+            
+            setTimeout(() => {
+                shareTextElement.classList.remove('copy-success');
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 2000);
+        }).catch(() => {
+            // Fallback for older browsers
+            document.execCommand('copy');
+            shareTextElement.classList.add('copy-success');
+            
+            setTimeout(() => {
+                shareTextElement.classList.remove('copy-success');
+            }, 2000);
+        });
+    }
+}
