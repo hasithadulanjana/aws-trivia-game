@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Trivia Game - Static Version</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn {
+            text-align: left;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        .option-btn.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .option-btn.correct {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        .option-btn.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .timer-warning {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-cloud"></i> AWS Trivia Game
+            </a>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h2><i class="fas fa-cloud"></i> AWS Trivia Game</h2>
+                        <p class="mb-0">Test your Amazon Web Services knowledge!</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-user fa-3x text-primary mb-3"></i>
+                            <h4>Single Player Mode</h4>
+                            <p class="text-muted">Challenge yourself with AWS trivia questions</p>
+                        </div>
+
+                        <div class="row text-center mb-4">
+                            <div class="col-4">
+                                <i class="fas fa-clock text-warning fa-2x"></i>
+                                <p class="small mt-2">15 seconds per question</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-trophy text-success fa-2x"></i>
+                                <p class="small mt-2">Track your score</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-aws text-info fa-2x"></i>
+                                <p class="small mt-2">AWS focused questions</p>
+                            </div>
+                        </div>
+
+                        <form id="startForm">
+                            <div class="mb-3">
+                                <label for="playerName" class="form-label">Enter your name:</label>
+                                <input type="text" class="form-control" id="playerName" 
+                                       placeholder="Your name" maxlength="20" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-play"></i> Start Game
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> About This Version</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This is a <strong>single-player static version</strong> that works on Netlify.</p>
+                        <p>For the full <strong>multiplayer experience</strong>, visit our server-hosted version!</p>
+                        <a href="https://github.com/hasithadulanjana/aws-trivia-game" class="btn btn-outline-primary">
+                            <i class="fab fa-github"></i> View on GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="row" style="display: none;">
+            <div class="col-lg-8">
+                <!-- Question Area -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span id="questionNumber">Question 1 of 10</span>
+                        <span id="timer" class="badge bg-warning fs-6">
+                            <i class="fas fa-clock"></i> <span id="timeLeft">15</span>s
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 id="questionText" class="mb-4"></h5>
+                        <div id="optionsContainer" class="d-grid gap-2">
+                            <!-- Options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Feedback -->
+                <div id="answerFeedback" class="alert" style="display: none;">
+                    <h6 id="feedbackTitle"></h6>
+                    <p id="feedbackText" class="mb-0"></p>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Score -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-trophy"></i> Your Score</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 id="currentScore" class="text-primary">0</h2>
+                        <p class="mb-0">out of <span id="totalQuestions">10</span></p>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-chart-line"></i> Progress</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-2">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">
+                            <span id="currentQuestion">0</span> of <span id="totalQuestionsProgress">10</span> completed
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="row justify-content-center" style="display: none;">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white text-center">
+                        <h2><i class="fas fa-trophy"></i> Game Complete!</h2>
+                    </div>
+                    <div class="card-body text-center">
+                        <h3 id="finalScore" class="text-primary mb-3"></h3>
+                        <p id="scoreMessage" class="mb-4"></p>
+                        <div class="d-grid gap-2">
+                            <button id="playAgainBtn" class="btn btn-primary btn-lg">
+                                <i class="fas fa-redo"></i> Play Again
+                            </button>
+                            <a href="https://github.com/hasithadulanjana/aws-trivia-game" class="btn btn-outline-secondary">
+                                <i class="fab fa-github"></i> Try Multiplayer Version
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2024 AWS Trivia Game. Test your AWS knowledge!</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="questions.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
