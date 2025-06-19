@@ -539,9 +539,51 @@ class TriviaGameClient {
         // Emit exit game event
         this.socket.emit('exit_game');
         
-        // Return to lobby
+        // Hide game areas and show lobby
+        this.hideAllGameScreens();
         this.showLobby();
+        
+        // Show exit notification
+        this.showExitNotification();
+        
+        // Update status
         this.updateStatus('Game exited. Returned to lobby.', 'info');
+    }
+    
+    hideAllGameScreens() {
+        // Hide all game-related screens
+        const gameScreens = [
+            'questionArea',
+            'gameArea', 
+            'gameOverArea'
+        ];
+        
+        gameScreens.forEach(screenId => {
+            const screen = document.getElementById(screenId);
+            if (screen) {
+                screen.style.display = 'none';
+            }
+        });
+    }
+    
+    showExitNotification() {
+        // Create exit notification
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+        notification.innerHTML = `
+            <i class="fas fa-sign-out-alt"></i> Successfully exited game!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
     }
     
     updateGameProgress(current, total) {

@@ -249,7 +249,10 @@
                     </div>
                     <div class="card-body text-center">
                         <p class="mb-3">Scan to play on your mobile device!</p>
-                        <div id="qrcode" class="qr-code d-inline-block mb-3"></div>
+                        <div class="qr-code d-inline-block mb-3">
+                            <img src="qr-code.png" alt="QR Code for AWS Trivia Game" 
+                                 style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
+                        </div>
                         <div class="d-grid gap-2">
                             <a href="https://aws-trivia-game.netlify.app/" target="_blank" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-external-link-alt"></i> Open in New Tab
@@ -404,7 +407,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="questions.js"></script>
     <script src="game.js"></script>
     
@@ -431,46 +433,6 @@
                 alert('Game URL: https://aws-trivia-game.netlify.app/');
             });
         }
-        
-        // Generate QR Code for Netlify deployment
-        document.addEventListener('DOMContentLoaded', function() {
-            const gameUrl = 'https://aws-trivia-game.netlify.app/';
-            
-            // Create QR code canvas element
-            const qrContainer = document.getElementById('qrcode');
-            const canvas = document.createElement('canvas');
-            qrContainer.appendChild(canvas);
-            
-            QRCode.toCanvas(canvas, gameUrl, {
-                width: 150,
-                height: 150,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                margin: 2,
-                errorCorrectionLevel: 'M'
-            }, function (error) {
-                if (error) {
-                    console.error('QR Code generation error:', error);
-                    // Fallback: show URL as text
-                    qrContainer.innerHTML = `
-                        <div class="text-center">
-                            <p class="small text-muted">QR Code not available</p>
-                            <a href="${gameUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-external-link-alt"></i> Open Game
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    console.log('QR code generated successfully for:', gameUrl);
-                    
-                    // Add URL text below QR code
-                    const urlText = document.createElement('p');
-                    urlText.className = 'small text-muted mt-2 mb-0';
-                    urlText.innerHTML = `<a href="${gameUrl}" target="_blank">${gameUrl}</a>`;
-                    qrContainer.appendChild(urlText);
-                }
-            });
-        });
     </script>
 </body>
 </html>
