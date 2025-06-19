@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Game - AWS Trivia{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Game Area -->
+    <div class="col-lg-8">
+        <!-- Connection Status -->
+        <div id="connectionStatus" class="alert alert-info">
+            <i class="fas fa-spinner fa-spin"></i> Connecting to game server...
+        </div>
+
+        <!-- Game Status -->
+        <div id="gameStatus" class="card mb-3" style="display: none;">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0" id="statusText">Waiting for players...</h5>
+                        <small class="text-muted" id="playerCount">0 players connected</small>
+                    </div>
+                    <div class="col-auto">
+                        <button id="startGameBtn" class="btn btn-success" style="display: none;">
+                            <i class="fas fa-play"></i> Start Game
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Area -->
+        <div id="questionArea" class="card" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span id="questionNumber">Question 1 of 10</span>
+                <span id="timer" class="badge bg-warning fs-6">
+                    <i class="fas fa-clock"></i> <span id="timeLeft">15</span>s
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 id="questionText" class="mb-4"></h5>
+                <div id="optionsContainer" class="d-grid gap-2">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Feedback -->
+        <div id="answerFeedback" class="alert" style="display: none;">
+            <h6 id="feedbackTitle"></h6>
+            <p id="feedbackText" class="mb-0"></p>
+        </div>
+
+        <!-- Game Over -->
+        <div id="gameOverArea" class="card" style="display: none;">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-trophy"></i> Game Over!</h4>
+            </div>
+            <div class="card-body text-center">
+                <h3 id="winnerText"></h3>
+                <p id="gameDuration" class="text-muted"></p>
+                <button id="newGameBtn" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Players List -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6><i class="fas fa-users"></i> Players</h6>
+            </div>
+            <div class="card-body">
+                <div id="playersList">
+                    <!-- Players will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-trophy"></i> Leaderboard</h6>
+            </div>
+            <div class="card-body">
+                <div id="leaderboard">
+                    <p class="text-muted text-center">Game not started</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}
