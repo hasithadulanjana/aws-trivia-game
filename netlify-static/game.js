@@ -398,10 +398,19 @@ class StaticTriviaGame {
         gameOverScreen.style.display = 'block';
         gameOverScreen.classList.add('welcome-animation');
         
+        // Calculate final stats
+        const total = this.gameQuestions.length;
+        const correct = this.score;
+        const percentage = Math.round((correct / total) * 100);
+        
         // Show final score
-        const percentage = Math.round((this.score / this.gameQuestions.length) * 100);
         document.getElementById('finalScore').textContent = 
-            `${this.score} out of ${this.gameQuestions.length} (${percentage}%)`;
+            `${correct} out of ${total} (${percentage}%)`;
+            
+        // Update detailed score display
+        document.getElementById('displayScore').textContent = correct;
+        document.getElementById('displayCorrect').textContent = correct;
+        document.getElementById('displayAccuracy').textContent = `${percentage}%`;
         
         // Show score message with celebration for high scores
         let message = '';
@@ -419,6 +428,9 @@ class StaticTriviaGame {
         }
         
         document.getElementById('scoreMessage').textContent = message;
+        
+        // Update social sharing text
+        updateShareTextStatic(correct, correct, total, percentage);
     }
     
     resetGame() {

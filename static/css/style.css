@@ -443,3 +443,171 @@ body {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
 }
+
+/* Social Media Buttons */
+.btn-linkedin {
+    background-color: #0077b5;
+    border-color: #0077b5;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-linkedin:hover {
+    background-color: #005885;
+    border-color: #005885;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 119, 181, 0.4);
+}
+
+.btn-facebook {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-facebook:hover {
+    background-color: #166fe5;
+    border-color: #166fe5;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(24, 119, 242, 0.4);
+}
+
+.btn-twitter {
+    background-color: #1da1f2;
+    border-color: #1da1f2;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-twitter:hover {
+    background-color: #0d8bd9;
+    border-color: #0d8bd9;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(29, 161, 242, 0.4);
+}
+
+.btn-whatsapp {
+    background-color: #25d366;
+    border-color: #25d366;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-whatsapp:hover {
+    background-color: #20ba5a;
+    border-color: #20ba5a;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+}
+
+/* Social sharing section animations */
+.social-share-card {
+    animation: slideInUp 0.8s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.share-button-group {
+    animation: fadeInStagger 1s ease-out;
+}
+
+@keyframes fadeInStagger {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Share text area styling */
+#shareText {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+}
+
+#shareText:hover {
+    background-color: #e9ecef;
+    border-color: #007bff;
+}
+
+#shareText:focus {
+    background-color: #fff;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Achievement badges */
+.achievement-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: bold;
+    margin: 0.25rem;
+    animation: badgeGlow 2s ease-in-out infinite alternate;
+}
+
+.achievement-excellent {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+}
+
+.achievement-good {
+    background: linear-gradient(45deg, #007bff, #6610f2);
+    color: white;
+}
+
+.achievement-average {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: #333;
+}
+
+@keyframes badgeGlow {
+    from { box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); }
+    to { box-shadow: 0 0 20px rgba(0, 0, 0, 0.4); }
+}
+
+/* Copy success animation */
+.copy-success {
+    animation: copyPulse 0.6s ease-out;
+}
+
+@keyframes copyPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: #28a745; }
+    100% { transform: scale(1); }
+}
+
+/* Mobile responsive adjustments for social buttons */
+@media (max-width: 768px) {
+    .social-share-card .btn {
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+    }
+    
+    .social-share-card .row.g-2 {
+        gap: 0.5rem;
+    }
+    
+    #shareText {
+        font-size: 0.9rem;
+    }
+}

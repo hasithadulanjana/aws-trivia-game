@@ -79,6 +79,89 @@
             <div class="card-body text-center">
                 <h3 id="winnerText"></h3>
                 <p id="gameDuration" class="text-muted"></p>
+                
+                <!-- Score Summary -->
+                <div class="row justify-content-center mb-4">
+                    <div class="col-md-8">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">Your Performance</h5>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <h3 id="finalScore" class="text-primary">0</h3>
+                                        <small class="text-muted">Score</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 id="correctAnswers" class="text-success">0</h3>
+                                        <small class="text-muted">Correct</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 id="accuracyRate" class="text-info">0%</h3>
+                                        <small class="text-muted">Accuracy</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Sharing Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-share-alt"></i> Share Your Achievement</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Show off your AWS knowledge to your network!</p>
+                        
+                        <!-- Social Media Buttons -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <button id="shareLinkedIn" class="btn btn-linkedin w-100">
+                                    <i class="fab fa-linkedin"></i> Share on LinkedIn
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="shareFacebook" class="btn btn-facebook w-100">
+                                    <i class="fab fa-facebook-f"></i> Share on Facebook
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="shareTwitter" class="btn btn-twitter w-100">
+                                    <i class="fab fa-twitter"></i> Share on Twitter
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="shareWhatsApp" class="btn btn-whatsapp w-100">
+                                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Copy Share Text -->
+                        <div class="mb-3">
+                            <label for="shareText" class="form-label">Share Text (Click to copy):</label>
+                            <textarea id="shareText" class="form-control" rows="3" readonly onclick="copyShareText()"></textarea>
+                        </div>
+
+                        <!-- Additional Sharing Options -->
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <button id="shareEmail" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-envelope"></i> Email
+                            </button>
+                            <button id="shareReddit" class="btn btn-outline-secondary btn-sm">
+                                <i class="fab fa-reddit"></i> Reddit
+                            </button>
+                            <button id="shareTelegram" class="btn btn-outline-secondary btn-sm">
+                                <i class="fab fa-telegram"></i> Telegram
+                            </button>
+                            <button id="copyGameLink" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-link"></i> Copy Game Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Actions -->
                 <div class="mt-3">
                     <button id="newGameBtn" class="btn btn-primary me-2">
                         <i class="fas fa-redo"></i> Play Again
