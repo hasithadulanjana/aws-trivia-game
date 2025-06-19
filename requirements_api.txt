@@ -1,0 +1,18 @@
+# AWS Trivia Questions API Server Requirements
+
+# Core Flask dependencies
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# JSON handling and utilities
+Werkzeug==2.3.7
+
+# For production deployment
+gunicorn==21.2.0
+
+# Optional: For enhanced logging and monitoring
+python-dotenv==1.0.0
+
+# Development dependencies (optional)
+pytest==7.4.2
+requests==2.31.0
