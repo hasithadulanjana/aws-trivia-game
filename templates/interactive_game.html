@@ -338,6 +338,10 @@
                 <div class="stat-label">Level</div>
             </div>
             <div class="stat-item">
+                <div id="questionDisplay" class="stat-value">0/0</div>
+                <div class="stat-label">Questions</div>
+            </div>
+            <div class="stat-item">
                 <div id="accuracyDisplay" class="stat-value">0%</div>
                 <div class="stat-label">Accuracy</div>
             </div>
@@ -644,8 +648,18 @@
                     return;
                 }
                 
+                // Show question progress
+                const progress = `Question ${this.currentQuestionIndex + 1} of ${this.questionsQueue.length}`;
+                console.log(progress);
+                
                 const question = this.questionsQueue[this.currentQuestionIndex];
-                this.gameEngine.loadQuestion(question);
+                
+                // Add a small delay before loading next question for better UX
+                setTimeout(() => {
+                    this.gameEngine.loadQuestion(question);
+                    this.showAchievement('Next Question', progress);
+                }, 500);
+                
                 this.currentQuestionIndex++;
             }
             
@@ -698,6 +712,7 @@
                 document.getElementById('scoreDisplay').textContent = this.gameEngine.score;
                 document.getElementById('livesDisplay').textContent = this.gameEngine.lives;
                 document.getElementById('levelDisplay').textContent = this.currentLevel;
+                document.getElementById('questionDisplay').textContent = `${this.currentQuestionIndex}/${this.totalQuestions}`;
                 
                 const accuracy = this.currentQuestionIndex > 0 ? 
                     Math.round((this.correctAnswers / this.currentQuestionIndex) * 100) : 0;

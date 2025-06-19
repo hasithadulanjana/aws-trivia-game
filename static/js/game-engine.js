@@ -327,8 +327,13 @@ class GameEngine {
     
     checkCollisions() {
         // Bullet-Target collisions
-        this.bullets.forEach((bullet, bulletIndex) => {
-            this.targets.forEach((target, targetIndex) => {
+        for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
+            const bullet = this.bullets[bulletIndex];
+            let bulletHit = false;
+            
+            for (let targetIndex = this.targets.length - 1; targetIndex >= 0; targetIndex--) {
+                const target = this.targets[targetIndex];
+                
                 if (this.isColliding(bullet, target)) {
                     // Create explosion
                     this.explosions.push(new Explosion(target.x, target.y));
@@ -340,26 +345,46 @@ class GameEngine {
                     if (target.isCorrect) {
                         this.score += 100;
                         this.correctAnswer();
+                        
+                        // Correct answer hit - clear all remaining targets and advance
+                        this.clearAllTargets();
+                        setTimeout(() => this.nextQuestion(), 1500); // Delay for effect viewing
+                        
+                        // Remove the bullet that hit the correct answer
+                        this.bullets.splice(bulletIndex, 1);
+                        bulletHit = true;
+                        break; // Exit target loop since we're clearing all targets
+                        
                     } else {
                         this.lives--;
                         this.wrongAnswer();
-                    }
-                    
-                    // Remove bullet and target
-                    this.bullets.splice(bulletIndex, 1);
-                    this.targets.splice(targetIndex, 1);
-                    
-                    // Remove from question targets
-                    const qtIndex = this.questionTargets.indexOf(target);
-                    if (qtIndex > -1) {
-                        this.questionTargets.splice(qtIndex, 1);
+                        
+                        // Wrong answer - remove this target and bullet
+                        this.bullets.splice(bulletIndex, 1);
+                        this.targets.splice(targetIndex, 1);
+                        
+                        // Remove from question targets
+                        const qtIndex = this.questionTargets.indexOf(target);
+                        if (qtIndex > -1) {
+                            this.questionTargets.splice(qtIndex, 1);
+                        }
+                        
+                        bulletHit = true;
+                        break; // Exit target loop for this bullet
                     }
                 }
-            });
-        });
+            }
+            
+            // If bullet hit something, continue to next bullet
+            if (bulletHit) {
+                continue;
+            }
+        }
         
-        // Check if all question targets are gone
-        if (this.currentQuestion && this.questionTargets.length === 0) {
+        // Check if all question targets are gone (for wrong answers only)
+        if (this.currentQuestion && this.questionTargets.length === 0 && this.targets.length === 0) {
+            // All wrong answers were shot, but correct answer wasn't found
+            // This shouldn't happen in normal gameplay, but handle it gracefully
             setTimeout(() => this.nextQuestion(), 1000);
         }
         
@@ -367,6 +392,23 @@ class GameEngine {
         if (this.lives <= 0) {
             this.gameOver();
         }
+    }
+    
+    clearAllTargets() {
+        // Create fade-out effect for remaining targets
+        this.targets.forEach(target => {
+            if (!target.isCorrect) {
+                // Create small particle effect for cleared targets
+                this.createParticles(target.x, target.y, '#888888');
+            }
+        });
+        
+        // Clear all targets and question targets
+        this.targets = [];
+        this.questionTargets = [];
+        
+        // Remove any remaining bullets
+        this.bullets = [];
     }
     
     isColliding(obj1, obj2) {
@@ -405,11 +447,40 @@ class GameEngine {
         // Play success sound
         this.playSound('correct');
         
-        // Add bonus particles
+        // Add bonus particles at center and around the screen
         this.createParticles(this.width / 2, this.height / 2, '#ffff00');
+        this.createParticles(this.width / 4, this.height / 3, '#00ff00');
+        this.createParticles(3 * this.width / 4, this.height / 3, '#00ff00');
         
         // Show success message
         this.showMessage('CORRECT! +100 points', '#00ff00');
+        
+        // Show "Next Question" indicator
+        setTimeout(() => {
+            this.showMessage('Next Question Loading...', '#ffff00');
+        }, 800);
+        
+        // Create celebration effect
+        this.createCelebrationEffect();
+    }
+    
+    createCelebrationEffect() {
+        // Create a burst of golden particles
+        for (let i = 0; i < 25; i++) {
+            const angle = (i / 25) * Math.PI * 2;
+            const speed = 5 + Math.random() * 5;
+            const particle = {
+                x: this.width / 2,
+                y: this.height / 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: '#ffd700',
+                life: 60,
+                maxLife: 60,
+                size: 3 + Math.random() * 3
+            };
+            this.particles.push(particle);
+        }
     }
     
     wrongAnswer() {
@@ -424,7 +495,7 @@ class GameEngine {
     }
     
     nextQuestion() {
-        // This will be called by the main game to load next question
+        // Clear current question state
         this.currentQuestion = null;
         this.questionTargets = [];
         
@@ -432,12 +503,31 @@ class GameEngine {
         if (this.score > 0 && this.score % 500 === 0) {
             this.level++;
             this.targetSpawnRate += 0.01;
+            this.showMessage(`LEVEL UP! Level ${this.level}`, '#ffff00');
         }
+        
+        // Trigger event for next question loading
+        if (this.onQuestionComplete) {
+            this.onQuestionComplete();
+        }
+        
+        // Show brief pause message
+        this.showMessage('Get Ready...', '#ffffff');
     }
     
     loadQuestion(questionData) {
         this.currentQuestion = questionData;
         this.questionTargets = [];
+        
+        // Clear any existing targets and bullets
+        this.targets = [];
+        this.bullets = [];
+        
+        // Show question loading effect
+        this.showMessage('New Question!', '#00ffff');
+        
+        // Create loading particles
+        this.createParticles(this.width / 2, this.height / 4, '#00ffff');
     }
     
     startGame() {
