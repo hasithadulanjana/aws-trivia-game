@@ -92,7 +92,11 @@
             </div>
             <div class="card-body text-center">
                 <p class="mb-3">Scan to join the game on your mobile device!</p>
-                <div id="qrcode" class="qr-code d-inline-block mb-3"></div>
+                <div class="qr-code d-inline-block mb-3">
+                    <img src="{{ url_for('static', filename='img/qr-code.png') }}" 
+                         alt="QR Code for AWS Trivia Game" 
+                         style="width: 150px; height: 150px; border: 2px solid #ddd; border-radius: 8px;">
+                </div>
                 <div class="d-grid gap-2">
                     <button onclick="copyCurrentUrl()" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-copy"></i> Copy Game Link

@@ -133,29 +133,47 @@ class StaticTriviaGame {
         // Play exit sound
         this.sounds.gameEnd();
         
-        // Show exit message
-        this.showExitMessage();
+        // Reset game state immediately
+        this.currentQuestionIndex = 0;
+        this.score = 0;
+        this.selectedAnswer = null;
+        this.answered = false;
         
-        // Reset game state after showing message
-        setTimeout(() => {
-            this.resetGame();
-        }, 2000);
+        // Hide game screen and show welcome screen immediately
+        document.getElementById('gameScreen').style.display = 'none';
+        document.getElementById('gameOverScreen').style.display = 'none';
+        
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        welcomeScreen.style.display = 'block';
+        welcomeScreen.classList.add('welcome-animation');
+        
+        // Reset form and UI
+        document.getElementById('playerName').value = '';
+        document.getElementById('currentScore').textContent = '0';
+        
+        // Show brief exit message
+        this.showExitNotification();
     }
     
-    // Show exit message
-    showExitMessage() {
-        const feedbackElement = document.getElementById('answerFeedback');
-        const titleElement = document.getElementById('feedbackTitle');
-        const textElement = document.getElementById('feedbackText');
-        
-        feedbackElement.style.display = 'block';
-        feedbackElement.className = 'alert alert-info welcome-animation';
-        titleElement.innerHTML = '<i class="fas fa-sign-out-alt"></i> Game Exited';
-        textElement.innerHTML = `
-            Thanks for playing, ${this.playerName}!<br>
-            Final Score: ${this.score} out of ${this.currentQuestionIndex}<br>
-            <small class="text-muted">Returning to welcome screen...</small>
+    // Show exit notification
+    showExitNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+        notification.innerHTML = `
+            <i class="fas fa-sign-out-alt"></i> Game exited successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
     }
     
     startGame() {
