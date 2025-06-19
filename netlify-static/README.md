@@ -1,5 +1,7 @@
 # AWS Trivia Game - Static Version for Netlify
 
+*Created in 2025 as part of the [AWS Community Challenge: Build Games with Amazon Q CLI](https://community.aws/content/2xIoduO0xhkhUApQpVUIqBFGmAc/build-games-with-amazon-q-cli-and-score-a-t-shirt?lang=en)*
+
 ## 🌐 **Netlify-Compatible Version**
 
 This is a **static, single-player version** of the AWS Trivia Game that works perfectly on Netlify and other static hosting platforms.
@@ -99,5 +101,16 @@ The game uses Bootstrap 5 and custom CSS. Modify the `<style>` section in `index
 ---
 
 **🎮 Enjoy testing your AWS knowledge!**
+
+## 👨‍💻 **Developer**
+
+**Hasitha Dulanjana**
+- 🌐 **Blog**: [hasiya4ops.online](https://hasiya4ops.online/)
+- 💻 **GitHub**: [github.com/hasithadulanjana](https://github.com/hasithadulanjana)
+- 🎮 **This Project**: [AWS Trivia Game](https://github.com/hasithadulanjana/aws-trivia-game)
+
+---
+
+*Created in 2025 as part of the [AWS Community Challenge: Build Games with Amazon Q CLI](https://community.aws/content/2xIoduO0xhkhUApQpVUIqBFGmAc/build-games-with-amazon-q-cli-and-score-a-t-shirt?lang=en)*
 
 *For the full multiplayer experience with real-time gameplay, check out the server version in the main repository.*
