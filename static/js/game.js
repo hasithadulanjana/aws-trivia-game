@@ -28,6 +28,7 @@ class TriviaGameClient {
             progressText: document.getElementById('progressText'),
             progressBar: document.getElementById('progressBar'),
             gameScore: document.getElementById('gameScore'),
+            exitGameBtn: document.getElementById('exitGameBtn')
             questionArea: document.getElementById('questionArea'),
             questionNumber: document.getElementById('questionNumber'),
             questionText: document.getElementById('questionText'),
@@ -59,6 +60,18 @@ class TriviaGameClient {
         this.elements.startGameBtn.addEventListener('click', () => this.confirmStartGame());
         this.elements.newGameBtn.addEventListener('click', () => this.resetForNewGame());
         this.elements.leaveGameBtn.addEventListener('click', () => this.confirmLeaveGame());
+        
+        // Exit game button (during gameplay)
+        if (this.elements.exitGameBtn) {
+            this.elements.exitGameBtn.addEventListener('click', () => this.handleExitGame());
+        }
+        
+        // Keyboard shortcut for exit (ESC key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.currentQuestion) {
+                this.handleExitGame();
+            }
+        });
     }
     
     connectToServer() {
@@ -497,6 +510,38 @@ class TriviaGameClient {
         
         // Redirect to home page
         window.location.href = '/';
+    }
+    
+    handleExitGame() {
+        this.elements.confirmTitle.textContent = 'Exit Current Game';
+        this.elements.confirmMessage.textContent = 'Are you sure you want to exit the current game? You will return to the lobby but remain connected.';
+        
+        // Set up confirm button
+        this.elements.confirmBtn.onclick = () => {
+            this.elements.confirmModal.hide();
+            this.exitCurrentGame();
+        };
+        
+        this.elements.confirmModal.show();
+    }
+    
+    exitCurrentGame() {
+        // Clear current question state
+        this.currentQuestion = null;
+        this.answered = false;
+        this.selectedAnswer = null;
+        
+        // Clear timer
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+        
+        // Emit exit game event
+        this.socket.emit('exit_game');
+        
+        // Return to lobby
+        this.showLobby();
+        this.updateStatus('Game exited. Returned to lobby.', 'info');
     }
     
     updateGameProgress(current, total) {

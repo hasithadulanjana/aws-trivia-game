@@ -86,6 +86,76 @@ class StaticTriviaGame {
         document.getElementById('playAgainBtn').addEventListener('click', () => {
             this.resetGame();
         });
+        
+        // Exit game buttons
+        document.getElementById('exitGameBtn').addEventListener('click', () => {
+            this.confirmExit();
+        });
+        
+        document.getElementById('exitGameBtn2').addEventListener('click', () => {
+            this.confirmExit();
+        });
+        
+        // Keyboard shortcut for exit (ESC key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('gameScreen').style.display !== 'none') {
+                this.confirmExit();
+            }
+        });
+    }
+    
+    // Confirm exit with user
+    confirmExit() {
+        // Play exit sound
+        this.sounds.incorrect();
+        
+        // Show confirmation dialog
+        const confirmed = confirm(
+            `Are you sure you want to exit the game?\n\n` +
+            `Current Progress:\n` +
+            `• Score: ${this.score} out of ${this.currentQuestionIndex}\n` +
+            `• Question: ${this.currentQuestionIndex + 1} of ${this.gameQuestions.length}\n\n` +
+            `Your progress will be lost.`
+        );
+        
+        if (confirmed) {
+            this.exitGame();
+        }
+    }
+    
+    // Exit game and return to welcome screen
+    exitGame() {
+        // Clear timer
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+        
+        // Play exit sound
+        this.sounds.gameEnd();
+        
+        // Show exit message
+        this.showExitMessage();
+        
+        // Reset game state after showing message
+        setTimeout(() => {
+            this.resetGame();
+        }, 2000);
+    }
+    
+    // Show exit message
+    showExitMessage() {
+        const feedbackElement = document.getElementById('answerFeedback');
+        const titleElement = document.getElementById('feedbackTitle');
+        const textElement = document.getElementById('feedbackText');
+        
+        feedbackElement.style.display = 'block';
+        feedbackElement.className = 'alert alert-info welcome-animation';
+        titleElement.innerHTML = '<i class="fas fa-sign-out-alt"></i> Game Exited';
+        textElement.innerHTML = `
+            Thanks for playing, ${this.playerName}!<br>
+            Final Score: ${this.score} out of ${this.currentQuestionIndex}<br>
+            <small class="text-muted">Returning to welcome screen...</small>
+        `;
     }
     
     startGame() {
@@ -113,6 +183,7 @@ class StaticTriviaGame {
         // Update UI
         document.getElementById('totalQuestions').textContent = this.gameQuestions.length;
         document.getElementById('totalQuestionsProgress').textContent = this.gameQuestions.length;
+        document.getElementById('playerNameDisplay').textContent = this.playerName;
         
         this.showQuestion();
     }

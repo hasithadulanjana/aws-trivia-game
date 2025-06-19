@@ -45,9 +45,14 @@
         <div id="questionArea" class="card" style="display: none;">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span id="questionNumber">Question 1 of 10</span>
-                <span id="timer" class="badge bg-warning fs-6">
-                    <i class="fas fa-clock"></i> <span id="timeLeft">15</span>s
-                </span>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="timer" class="badge bg-warning fs-6">
+                        <i class="fas fa-clock"></i> <span id="timeLeft">15</span>s
+                    </span>
+                    <button id="exitGameBtn" class="btn btn-outline-danger btn-sm exit-btn" title="Exit Game">
+                        <i class="fas fa-times"></i> Exit
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <h5 id="questionText" class="mb-4"></h5>

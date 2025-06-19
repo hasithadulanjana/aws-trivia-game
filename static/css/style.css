@@ -418,3 +418,28 @@ body {
         transition-duration: 0.01ms !important;
     }
 }
+/* Exit Button Styling */
+.exit-btn {
+    transition: all 0.3s ease;
+}
+
+.exit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+}
+
+.exit-btn:active {
+    transform: scale(0.95);
+}
+
+/* Game Controls */
+.game-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.game-controls .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
