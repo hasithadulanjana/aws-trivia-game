@@ -46,10 +46,14 @@ class GameEngine {
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
             
-            // Shooting with spacebar
+            // Shooting with spacebar or continue
             if (e.code === 'Space') {
                 e.preventDefault();
-                this.player.shoot(this.bullets);
+                if (this.gameState === 'playing') {
+                    this.player.shoot(this.bullets);
+                } else if (this.gameState === 'waiting_continue') {
+                    this.handleContinueInput();
+                }
             }
         });
         
@@ -67,6 +71,8 @@ class GameEngine {
         this.canvas.addEventListener('click', (e) => {
             if (this.gameState === 'playing') {
                 this.player.shootAt(this.mouse.x, this.mouse.y, this.bullets);
+            } else if (this.gameState === 'waiting_continue') {
+                this.handleContinueInput();
             }
         });
         
@@ -80,6 +86,8 @@ class GameEngine {
             
             if (this.gameState === 'playing') {
                 this.player.shootAt(this.mouse.x, this.mouse.y, this.bullets);
+            } else if (this.gameState === 'waiting_continue') {
+                this.handleContinueInput();
             }
         });
         
@@ -97,11 +105,14 @@ class GameEngine {
     }
     
     update() {
-        if (this.gameState !== 'playing') return;
+        if (this.gameState !== 'playing' && this.gameState !== 'waiting_continue') return;
         
-        // Update player
-        this.player.update(this.keys, this.width, this.height);
+        // Update player (only if playing, not waiting)
+        if (this.gameState === 'playing') {
+            this.player.update(this.keys, this.width, this.height);
+        }
         
+        // Always update visual effects
         // Update bullets
         this.bullets.forEach((bullet, index) => {
             bullet.update();
@@ -110,13 +121,15 @@ class GameEngine {
             }
         });
         
-        // Update targets
-        this.targets.forEach((target, index) => {
-            target.update();
-            if (target.y > this.height + 50) {
-                this.targets.splice(index, 1);
-            }
-        });
+        // Update targets (only if playing)
+        if (this.gameState === 'playing') {
+            this.targets.forEach((target, index) => {
+                target.update();
+                if (target.y > this.height + 50) {
+                    this.targets.splice(index, 1);
+                }
+            });
+        }
         
         // Update particles
         this.particles.forEach((particle, index) => {
@@ -134,18 +147,25 @@ class GameEngine {
             }
         });
         
-        // Check collisions
-        this.checkCollisions();
-        
-        // Spawn new targets (question options)
-        if (this.currentQuestion && this.questionTargets.length === 0) {
-            this.spawnQuestionTargets();
+        // Update continue prompt pulse
+        if (this.continuePrompt && this.continuePrompt.active) {
+            this.continuePrompt.pulse += 0.1;
         }
         
-        // Update timer
-        this.timeLeft -= 1/60; // Assuming 60 FPS
-        if (this.timeLeft <= 0) {
-            this.gameOver();
+        // Check collisions (only if playing)
+        if (this.gameState === 'playing') {
+            this.checkCollisions();
+            
+            // Spawn new targets (question options)
+            if (this.currentQuestion && this.questionTargets.length === 0) {
+                this.spawnQuestionTargets();
+            }
+            
+            // Update timer
+            this.timeLeft -= 1/60; // Assuming 60 FPS
+            if (this.timeLeft <= 0) {
+                this.gameOver();
+            }
         }
     }
     
@@ -162,7 +182,7 @@ class GameEngine {
         // Draw stars background
         this.drawStars();
         
-        if (this.gameState === 'playing') {
+        if (this.gameState === 'playing' || this.gameState === 'waiting_continue') {
             // Draw game objects
             this.particles.forEach(particle => particle.render(this.ctx));
             this.targets.forEach(target => target.render(this.ctx));
@@ -173,9 +193,14 @@ class GameEngine {
             // Draw UI
             this.drawUI();
             
-            // Draw question
-            if (this.currentQuestion) {
+            // Draw question (only if playing)
+            if (this.currentQuestion && this.gameState === 'playing') {
                 this.drawQuestion();
+            }
+            
+            // Draw continue prompt if waiting
+            if (this.gameState === 'waiting_continue') {
+                this.drawContinuePrompt();
             }
         } else if (this.gameState === 'menu') {
             this.drawMenu();
@@ -325,6 +350,35 @@ class GameEngine {
         this.ctx.textAlign = 'left';
     }
     
+    drawContinuePrompt() {
+        if (!this.continuePrompt || !this.continuePrompt.active) return;
+        
+        // Pulsing background
+        const pulse = Math.sin(this.continuePrompt.pulse) * 0.3 + 0.7;
+        this.ctx.fillStyle = `rgba(255, 255, 0, ${pulse * 0.3})`;
+        this.ctx.fillRect(0, this.height - 150, this.width, 150);
+        
+        // Continue message
+        this.ctx.fillStyle = '#ffff00';
+        this.ctx.font = 'bold 32px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('READY FOR NEXT QUESTION?', this.width / 2, this.height - 100);
+        
+        // Instructions with pulsing effect
+        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.fillText('Press SPACE or CLICK to continue', this.width / 2, this.height - 60);
+        
+        // Visual indicator
+        const indicatorSize = 10 + Math.sin(this.continuePrompt.pulse * 2) * 5;
+        this.ctx.fillStyle = `rgba(255, 255, 0, ${pulse})`;
+        this.ctx.beginPath();
+        this.ctx.arc(this.width / 2, this.height - 30, indicatorSize, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.textAlign = 'left';
+    }
+    
     checkCollisions() {
         // Bullet-Target collisions
         for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
@@ -346,9 +400,9 @@ class GameEngine {
                         this.score += 100;
                         this.correctAnswer();
                         
-                        // Correct answer hit - clear all remaining targets and advance
+                        // Correct answer hit - clear all remaining targets and show continue prompt
                         this.clearAllTargets();
-                        setTimeout(() => this.nextQuestion(), 1500); // Delay for effect viewing
+                        this.showContinuePrompt();
                         
                         // Remove the bullet that hit the correct answer
                         this.bullets.splice(bulletIndex, 1);
@@ -382,10 +436,10 @@ class GameEngine {
         }
         
         // Check if all question targets are gone (for wrong answers only)
-        if (this.currentQuestion && this.questionTargets.length === 0 && this.targets.length === 0) {
+        if (this.currentQuestion && this.questionTargets.length === 0 && this.targets.length === 0 && this.gameState === 'playing') {
             // All wrong answers were shot, but correct answer wasn't found
             // This shouldn't happen in normal gameplay, but handle it gracefully
-            setTimeout(() => this.nextQuestion(), 1000);
+            this.showContinuePrompt();
         }
         
         // Check game over conditions
@@ -409,6 +463,34 @@ class GameEngine {
         
         // Remove any remaining bullets
         this.bullets = [];
+    }
+    
+    showContinuePrompt() {
+        // Change game state to waiting
+        this.gameState = 'waiting_continue';
+        
+        // Show continue message with instructions
+        this.showMessage('Press SPACE or CLICK to continue', '#ffff00');
+        
+        // Create pulsing continue indicator
+        this.continuePrompt = {
+            active: true,
+            pulse: 0,
+            x: this.width / 2,
+            y: this.height - 100
+        };
+    }
+    
+    handleContinueInput() {
+        if (this.gameState === 'waiting_continue') {
+            this.gameState = 'playing';
+            this.continuePrompt = null;
+            
+            // Add a brief delay before next question for smooth transition
+            setTimeout(() => {
+                this.nextQuestion();
+            }, 500);
+        }
     }
     
     isColliding(obj1, obj2) {
@@ -455,13 +537,13 @@ class GameEngine {
         // Show success message
         this.showMessage('CORRECT! +100 points', '#00ff00');
         
-        // Show "Next Question" indicator
-        setTimeout(() => {
-            this.showMessage('Next Question Loading...', '#ffff00');
-        }, 800);
-        
         // Create celebration effect
         this.createCelebrationEffect();
+        
+        // Show brief pause message before continue prompt
+        setTimeout(() => {
+            this.showMessage('Great job! Take a moment to review...', '#ffffff');
+        }, 1000);
     }
     
     createCelebrationEffect() {
