@@ -17,41 +17,50 @@ Since Netlify only supports static websites, I've created a **single-player stat
 
 ### **Method 1: Drag & Drop (Fastest)**
 
-1. **Download the static files**:
-   ```bash
-   # Navigate to your project
-   cd /Users/hasitha/game
-   
-   # Create a zip of the static version
-   zip -r netlify-static.zip netlify-static/
-   ```
+1. **Download only the static files**:
+   - Go to: https://github.com/hasithadulanjana/aws-trivia-game/tree/main/netlify-static
+   - Download the `netlify-static` folder contents
+   - Create a zip file with just these files:
+     - `index.html`
+     - `game.js`
+     - `questions.js`
+     - `_redirects`
 
 2. **Deploy to Netlify**:
    - Go to [netlify.com](https://netlify.com)
    - Sign up/login
-   - Drag and drop `netlify-static.zip`
+   - Drag and drop the zip file (or folder)
    - Your game is live! 🎉
 
 ### **Method 2: GitHub Integration (Recommended)**
 
-1. **Push to GitHub** (we'll do this now)
-2. **Connect Netlify**:
+1. **Connect Netlify to GitHub**:
    - Go to [netlify.com](https://netlify.com)
    - Click "New site from Git"
    - Connect your GitHub repository
-   - Set **Base directory**: `netlify-static`
+   
+2. **Configure Build Settings**:
+   - **Repository**: `hasithadulanjana/aws-trivia-game`
+   - **Branch**: `main`
+   - **Base directory**: `netlify-static`
+   - **Build command**: (leave empty)
+   - **Publish directory**: `netlify-static`
+   
+3. **Deploy**:
    - Click "Deploy site"
+   - Netlify will automatically use the `netlify.toml` configuration
 
-### **Method 3: Netlify CLI**
+### **Method 3: Manual Configuration**
 
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
+If the automatic detection doesn't work:
 
-# Deploy
-cd netlify-static
-netlify deploy --prod
-```
+1. **Site Settings** → **Build & Deploy**
+2. **Build Settings**:
+   - **Base directory**: `netlify-static`
+   - **Build command**: (leave empty)
+   - **Publish directory**: `netlify-static`
+3. **Environment Variables**: None needed
+4. **Deploy**
 
 ## 🎮 **What You Get**
 

@@ -1,0 +1,21 @@
+[build]
+  # For static version deployment
+  base = "netlify-static"
+  publish = "netlify-static"
+  
+  # No build command needed for static files
+  command = ""
+
+[build.environment]
+  # No Python needed for static version
+
+[[redirects]]
+  # Handle client-side routing
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production]
+  # Production settings
+  base = "netlify-static"
+  publish = "netlify-static"
