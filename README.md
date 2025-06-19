@@ -281,6 +281,15 @@ Choose your preferred way to play:
 
 ---
 
+## 👨‍💻 **Developer**
+
+**Hasitha Dulanjana**
+- 🌐 **Blog**: [hasiya4ops.online](https://hasiya4ops.online/)
+- 💻 **GitHub**: [github.com/hasithadulanjana](https://github.com/hasithadulanjana)
+- 🎮 **This Project**: [AWS Trivia Game](https://github.com/hasithadulanjana/aws-trivia-game)
+
+---
+
 *Built with ❤️ for the AWS community in 2025. Happy learning!*
 
 *Created as part of the [AWS Community Challenge: Build Games with Amazon Q CLI](https://community.aws/content/2xIoduO0xhkhUApQpVUIqBFGmAc/build-games-with-amazon-q-cli-and-score-a-t-shirt?lang=en)*
