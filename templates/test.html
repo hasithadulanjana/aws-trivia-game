@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .connecting { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status" class="status connecting">Connecting to server...</div>
+    <div id="messages"></div>
+    <button onclick="testMessage()">Send Test Message</button>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        
+        function addMessage(msg) {
+            messages.innerHTML += '<p>' + new Date().toLocaleTimeString() + ': ' + msg + '</p>';
+        }
+        
+        socket.on('connect', function() {
+            status.innerHTML = 'Connected to server!';
+            status.className = 'status connected';
+            addMessage('✅ Connected to server');
+            console.log('Connected to server');
+        });
+        
+        socket.on('disconnect', function() {
+            status.innerHTML = 'Disconnected from server';
+            status.className = 'status disconnected';
+            addMessage('❌ Disconnected from server');
+            console.log('Disconnected from server');
+        });
+        
+        socket.on('connect_error', function(error) {
+            status.innerHTML = 'Connection Error: ' + error;
+            status.className = 'status disconnected';
+            addMessage('❌ Connection error: ' + error);
+            console.error('Connection error:', error);
+        });
+        
+        socket.on('connected', function(data) {
+            addMessage('📨 Server message: ' + data.message);
+        });
+        
+        function testMessage() {
+            socket.emit('test_message', {data: 'Hello from test page'});
+            addMessage('📤 Sent test message');
+        }
+    </script>
+</body>
+</html>

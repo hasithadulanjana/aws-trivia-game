@@ -76,13 +76,18 @@ class WebTriviaGame:
     def start_game(self, session_id):
         """Start the game (host only)"""
         if session_id != self.host_session:
+            print(f"Non-host {session_id} attempted to start game. Host is {self.host_session}")
             return False, "Only the host can start the game"
         
         if self.game_in_progress:
+            print(f"Game start attempted while game already in progress")
             return False, "Game already in progress"
         
         if len(self.players) < 1:
+            print(f"Game start attempted with insufficient players: {len(self.players)}")
             return False, "Need at least 1 player to start"
+        
+        print(f"Host {session_id} starting game with {len(self.players)} players")
         
         # Prepare questions
         self.game_questions = random.sample(questions, min(len(questions), QUESTIONS_PER_GAME))
@@ -253,6 +258,11 @@ def index():
     """Main game page"""
     return render_template('index.html')
 
+@app.route('/test')
+def test_page():
+    """Test Socket.IO connection page"""
+    return render_template('test.html')
+
 @app.route('/game')
 def game_page():
     """Game interface page"""
@@ -284,9 +294,13 @@ def handle_join_game(data):
         emit('error', {'message': 'Nickname is required'})
         return
     
+    print(f"Player attempting to join: {nickname} (session: {request.sid})")
+    
     success, message = game.add_player(request.sid, nickname)
     
     if success:
+        print(f"Player {nickname} joined successfully. Total players: {len(game.players)}")
+        
         # Notify all players
         emit('player_joined', {
             'nickname': nickname,
@@ -299,17 +313,23 @@ def handle_join_game(data):
         
         # If this is the host, give them admin rights
         if request.sid == game.host_session:
-            emit('host_privileges', {'message': 'You are the host. You can start the game.'})
+            print(f"Granting host privileges to {nickname}")
+            emit('host_privileges', {'message': 'You are the host. You can start the game when ready.'})
     else:
+        print(f"Failed to add player {nickname}: {message}")
         emit('error', {'message': message})
 
 @socketio.on('start_game')
 def handle_start_game():
     """Handle game start request"""
+    print(f"Game start requested by session: {request.sid}")
     success, message = game.start_game(request.sid)
     
     if not success:
+        print(f"Game start failed: {message}")
         emit('error', {'message': message})
+    else:
+        print(f"Game started successfully by {request.sid}")
 
 @socketio.on('submit_answer')
 def handle_submit_answer(data):
@@ -329,6 +349,12 @@ def handle_submit_answer(data):
 def handle_get_game_state():
     """Send current game state to requesting client"""
     emit('game_state', game.get_game_state())
+
+@socketio.on('test_message')
+def handle_test_message(data):
+    """Handle test message"""
+    print(f'Received test message: {data}')
+    emit('connected', {'message': 'Test message received!'})
 
 if __name__ == '__main__':
     print("Starting AWS Trivia Game Web Server...")
