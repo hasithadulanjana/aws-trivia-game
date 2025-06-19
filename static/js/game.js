@@ -22,11 +22,17 @@ class TriviaGameClient {
             gameStatus: document.getElementById('gameStatus'),
             statusText: document.getElementById('statusText'),
             playerCount: document.getElementById('playerCount'),
+            playerCountBadge: document.getElementById('playerCountBadge'),
             startGameBtn: document.getElementById('startGameBtn'),
+            gameProgress: document.getElementById('gameProgress'),
+            progressText: document.getElementById('progressText'),
+            progressBar: document.getElementById('progressBar'),
+            gameScore: document.getElementById('gameScore'),
             questionArea: document.getElementById('questionArea'),
             questionNumber: document.getElementById('questionNumber'),
             questionText: document.getElementById('questionText'),
             optionsContainer: document.getElementById('optionsContainer'),
+            answerStatus: document.getElementById('answerStatus'),
             timer: document.getElementById('timer'),
             timeLeft: document.getElementById('timeLeft'),
             answerFeedback: document.getElementById('answerFeedback'),
@@ -36,15 +42,23 @@ class TriviaGameClient {
             winnerText: document.getElementById('winnerText'),
             gameDuration: document.getElementById('gameDuration'),
             newGameBtn: document.getElementById('newGameBtn'),
+            leaveGameBtn: document.getElementById('leaveGameBtn'),
             playersList: document.getElementById('playersList'),
             leaderboard: document.getElementById('leaderboard'),
+            totalQuestions: document.getElementById('totalQuestions'),
+            timePerQuestion: document.getElementById('timePerQuestion'),
+            confirmModal: new bootstrap.Modal(document.getElementById('confirmModal')),
+            confirmTitle: document.getElementById('confirmTitle'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            confirmBtn: document.getElementById('confirmBtn'),
             errorModal: new bootstrap.Modal(document.getElementById('errorModal')),
             errorMessage: document.getElementById('errorMessage')
         };
         
         // Event listeners
-        this.elements.startGameBtn.addEventListener('click', () => this.startGame());
+        this.elements.startGameBtn.addEventListener('click', () => this.confirmStartGame());
         this.elements.newGameBtn.addEventListener('click', () => this.resetForNewGame());
+        this.elements.leaveGameBtn.addEventListener('click', () => this.confirmLeaveGame());
     }
     
     connectToServer() {
@@ -55,13 +69,37 @@ class TriviaGameClient {
             return;
         }
         
-        // Connect to Socket.IO server
-        this.socket = io();
+        // Connect to Socket.IO server with explicit configuration
+        this.socket = io({
+            transports: ['websocket', 'polling'],
+            timeout: 5000,
+            forceNew: true
+        });
+        
+        // Add connection timeout
+        setTimeout(() => {
+            if (!this.socket.connected) {
+                this.showError('Failed to connect to game server. Please refresh and try again.');
+            }
+        }, 10000);
         
         // Socket event listeners
-        this.socket.on('connect', () => this.onConnect());
-        this.socket.on('disconnect', () => this.onDisconnect());
-        this.socket.on('error', (data) => this.showError(data.message));
+        this.socket.on('connect', () => {
+            console.log('Socket.IO connected successfully');
+            this.onConnect();
+        });
+        this.socket.on('disconnect', () => {
+            console.log('Socket.IO disconnected');
+            this.onDisconnect();
+        });
+        this.socket.on('connect_error', (error) => {
+            console.error('Socket.IO connection error:', error);
+            this.showError('Connection failed: ' + error.message);
+        });
+        this.socket.on('error', (data) => {
+            console.error('Socket.IO error:', data);
+            this.showError(data.message);
+        });
         this.socket.on('player_joined', (data) => this.onPlayerJoined(data));
         this.socket.on('player_left', (data) => this.onPlayerLeft(data));
         this.socket.on('host_privileges', (data) => this.onHostPrivileges(data));
@@ -75,17 +113,14 @@ class TriviaGameClient {
     }
     
     onConnect() {
-        this.elements.connectionStatus.innerHTML = '<i class="fas fa-check"></i> Connected! Joining game...';
-        this.elements.connectionStatus.className = 'alert alert-success';
+        this.updateConnectionStatus('check', 'Connected! Joining game...', 'success');
         
         // Join the game
         this.socket.emit('join_game', { nickname: this.nickname });
     }
     
     onDisconnect() {
-        this.elements.connectionStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Disconnected from server';
-        this.elements.connectionStatus.className = 'alert alert-danger';
-        this.elements.connectionStatus.style.display = 'block';
+        this.updateConnectionStatus('exclamation-triangle', 'Disconnected from server. Trying to reconnect...', 'danger');
     }
     
     onPlayerJoined(data) {
@@ -106,7 +141,14 @@ class TriviaGameClient {
     onHostPrivileges(data) {
         this.isHost = true;
         this.elements.startGameBtn.style.display = 'block';
-        this.elements.statusText.textContent = 'You are the host! Start the game when ready.';
+        this.elements.startGameBtn.disabled = false;
+        this.elements.statusText.innerHTML = '<i class="fas fa-crown"></i> You are the host! Click "Start Game" when ready.';
+        
+        // Add visual emphasis for host
+        this.elements.gameStatus.classList.add('border-warning');
+        
+        // Show host instructions
+        this.showHostInstructions();
     }
     
     updateGameState(data) {
@@ -121,6 +163,12 @@ class TriviaGameClient {
     
     updatePlayerCount(count) {
         this.elements.playerCount.textContent = `${count} player${count !== 1 ? 's' : ''} connected`;
+        this.elements.playerCountBadge.textContent = count;
+        
+        // Update players list if empty
+        if (count === 0) {
+            this.elements.playersList.innerHTML = '<p class="text-muted text-center">No players connected</p>';
+        }
     }
     
     updatePlayersList(players) {
@@ -157,17 +205,31 @@ class TriviaGameClient {
     }
     
     startGame() {
+        // Add confirmation for host
+        if (!confirm('Are you ready to start the game? All connected players will participate.')) {
+            return;
+        }
+        
         this.socket.emit('start_game');
         this.elements.startGameBtn.disabled = true;
+        this.elements.startGameBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+        this.elements.statusText.textContent = 'Starting game...';
     }
     
     onGameStarting(data) {
         this.elements.gameStatus.style.display = 'none';
-        this.elements.statusText.textContent = `Game starting! ${data.total_questions} questions total.`;
+        this.elements.connectionStatus.style.display = 'none';
+        
+        // Update game info
+        this.elements.totalQuestions.textContent = data.total_questions;
+        this.updateGameProgress(0, data.total_questions);
         
         // Hide other areas
         this.elements.answerFeedback.style.display = 'none';
         this.elements.gameOverArea.style.display = 'none';
+        
+        // Show starting message
+        this.showTemporaryMessage(`Game starting! ${data.total_questions} questions total.`, 'info');
     }
     
     onNewQuestion(data) {
@@ -175,9 +237,14 @@ class TriviaGameClient {
         this.selectedAnswer = null;
         this.answered = false;
         
+        // Update progress
+        this.updateGameProgress(data.question_number, data.total_questions);
+        
         // Update question display
         this.elements.questionNumber.textContent = `Question ${data.question_number} of ${data.total_questions}`;
         this.elements.questionText.textContent = data.question;
+        this.elements.answerStatus.textContent = 'Select your answer';
+        this.elements.answerStatus.className = 'text-muted';
         
         // Create option buttons
         this.elements.optionsContainer.innerHTML = '';
@@ -209,6 +276,10 @@ class TriviaGameClient {
         // Mark new selection
         buttonElement.classList.add('selected');
         this.selectedAnswer = index;
+        
+        // Update status
+        this.elements.answerStatus.textContent = 'Answer submitted!';
+        this.elements.answerStatus.className = 'text-success';
         
         // Submit answer
         this.socket.emit('submit_answer', { answer_index: index });
@@ -355,6 +426,114 @@ class TriviaGameClient {
         this.elements.errorMessage.textContent = message;
         this.elements.errorModal.show();
     }
+    
+    showHostInstructions() {
+        // Create a temporary notification for host
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show mt-3';
+        notification.innerHTML = `
+            <i class="fas fa-info-circle"></i>
+            <strong>Host Instructions:</strong>
+            <ul class="mb-0 mt-2">
+                <li>Wait for other players to join (optional)</li>
+                <li>Click "Start Game" when you're ready to begin</li>
+                <li>The game will start immediately after clicking</li>
+                <li>All connected players will participate</li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert after game status
+        this.elements.gameStatus.parentNode.insertBefore(notification, this.elements.gameStatus.nextSibling);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 10000);
+    }
+    
+    updateConnectionStatus(status, message, type = 'info') {
+        this.elements.connectionStatus.className = `alert alert-${type}`;
+        this.elements.connectionStatus.innerHTML = `<i class="fas fa-${status}"></i> ${message}`;
+        this.elements.connectionStatus.style.display = 'block';
+    }
+    
+    confirmStartGame() {
+        this.elements.confirmTitle.textContent = 'Start Game';
+        this.elements.confirmMessage.textContent = 'Are you ready to start the game? All connected players will participate and the game will begin immediately.';
+        
+        // Set up confirm button
+        this.elements.confirmBtn.onclick = () => {
+            this.elements.confirmModal.hide();
+            this.startGame();
+        };
+        
+        this.elements.confirmModal.show();
+    }
+    
+    confirmLeaveGame() {
+        this.elements.confirmTitle.textContent = 'Leave Game';
+        this.elements.confirmMessage.textContent = 'Are you sure you want to leave the game? You will be disconnected and cannot rejoin this session.';
+        
+        // Set up confirm button
+        this.elements.confirmBtn.onclick = () => {
+            this.elements.confirmModal.hide();
+            this.leaveGame();
+        };
+        
+        this.elements.confirmModal.show();
+    }
+    
+    leaveGame() {
+        // Disconnect from the game
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+        
+        // Clear session storage
+        sessionStorage.removeItem('nickname');
+        
+        // Redirect to home page
+        window.location.href = '/';
+    }
+    
+    updateGameProgress(current, total) {
+        const percentage = (current / total) * 100;
+        this.elements.progressBar.style.width = `${percentage}%`;
+        this.elements.progressText.textContent = `Question ${current} of ${total}`;
+        
+        if (current > 0) {
+            this.elements.gameProgress.style.display = 'block';
+        }
+    }
+    
+    updatePlayerScore(score) {
+        this.elements.gameScore.textContent = `Score: ${score}`;
+    }
+    
+    showTemporaryMessage(message, type = 'info', duration = 3000) {
+        // Create temporary alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the game area
+        const gameArea = document.querySelector('.col-lg-8');
+        gameArea.insertBefore(alert, gameArea.firstChild);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, duration);
+    }
+}
 }
 
 // Initialize the game when the page loads

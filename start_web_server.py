@@ -15,12 +15,12 @@ if __name__ == '__main__':
     print("=" * 50)
     print("🚀 AWS Trivia Game Web Server Starting...")
     print("=" * 50)
-    print("📱 Access the game at: http://localhost:5000")
-    print("🌐 Or from other devices: http://YOUR_IP:5000")
+    print("📱 Access the game at: http://localhost:8080")
+    print("🌐 Or from other devices: http://YOUR_IP:8080")
     print("=" * 50)
     
     try:
-        socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+        socketio.run(app, host='0.0.0.0', port=8080, debug=False)
     except KeyboardInterrupt:
         print("\n👋 Server stopped by user")
     except Exception as e:

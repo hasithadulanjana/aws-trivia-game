@@ -20,10 +20,23 @@
                         <small class="text-muted" id="playerCount">0 players connected</small>
                     </div>
                     <div class="col-auto">
-                        <button id="startGameBtn" class="btn btn-success" style="display: none;">
+                        <button id="startGameBtn" class="btn btn-success btn-lg" style="display: none;">
                             <i class="fas fa-play"></i> Start Game
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Progress -->
+        <div id="gameProgress" class="card mb-3" style="display: none;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span id="progressText">Question 1 of 10</span>
+                    <span class="badge bg-primary" id="gameScore">Score: 0</span>
+                </div>
+                <div class="question-progress">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
                 </div>
             </div>
         </div>
@@ -40,6 +53,9 @@
                 <h5 id="questionText" class="mb-4"></h5>
                 <div id="optionsContainer" class="d-grid gap-2">
                     <!-- Options will be populated by JavaScript -->
+                </div>
+                <div class="mt-3 text-center">
+                    <small class="text-muted" id="answerStatus">Select your answer</small>
                 </div>
             </div>
         </div>
@@ -58,23 +74,50 @@
             <div class="card-body text-center">
                 <h3 id="winnerText"></h3>
                 <p id="gameDuration" class="text-muted"></p>
-                <button id="newGameBtn" class="btn btn-primary">
-                    <i class="fas fa-redo"></i> Play Again
-                </button>
+                <div class="mt-3">
+                    <button id="newGameBtn" class="btn btn-primary me-2">
+                        <i class="fas fa-redo"></i> Play Again
+                    </button>
+                    <button id="leaveGameBtn" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Leave Game
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-        <!-- Players List -->
+        <!-- Game Info -->
         <div class="card mb-3">
             <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Game Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <strong id="totalQuestions">10</strong>
+                            <br><small class="text-muted">Questions</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <strong id="timePerQuestion">15</strong>
+                        <br><small class="text-muted">Seconds</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players List -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h6><i class="fas fa-users"></i> Players</h6>
+                <span class="badge bg-primary" id="playerCountBadge">0</span>
             </div>
             <div class="card-body">
                 <div id="playersList">
-                    <!-- Players will be populated by JavaScript -->
+                    <p class="text-muted text-center">No players connected</p>
                 </div>
             </div>
         </div>
@@ -88,6 +131,25 @@
                 <div id="leaderboard">
                     <p class="text-muted text-center">Game not started</p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmBtn">Confirm</button>
             </div>
         </div>
     </div>
