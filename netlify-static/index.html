@@ -10,12 +10,78 @@
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            animation: backgroundShift 10s ease-in-out infinite alternate;
         }
+        
+        @keyframes backgroundShift {
+            0% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+            100% { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
+        }
+        
         .card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: cardFloat 3s ease-in-out infinite alternate;
         }
+        
+        @keyframes cardFloat {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-10px); }
+        }
+        
+        .navbar {
+            animation: slideDown 1s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .welcome-animation {
+            animation: fadeInUp 1.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .icon-bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .pulse-button {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .qr-code {
+            animation: rotateIn 1s ease-out;
+            transition: transform 0.3s ease;
+        }
+        
+        .qr-code:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        @keyframes rotateIn {
+            from { transform: rotate(-180deg) scale(0); opacity: 0; }
+            to { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+        
         .option-btn {
             text-align: left;
             padding: 1rem;
@@ -24,34 +90,100 @@
             background: white;
             color: #333;
             transition: all 0.3s ease;
+            animation: slideInLeft 0.5s ease-out;
         }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
         .option-btn:hover {
             border-color: #007bff;
             background: #f8f9fa;
-            transform: translateX(5px);
+            transform: translateX(10px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
         }
+        
         .option-btn.selected {
             border-color: #007bff;
             background: #e3f2fd;
             color: #1976d2;
+            animation: selectedPulse 0.5s ease-out;
         }
+        
+        @keyframes selectedPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
         .option-btn.correct {
             border-color: #28a745;
             background: #d4edda;
             color: #155724;
+            animation: correctShake 0.6s ease-out;
         }
+        
+        @keyframes correctShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
         .option-btn.incorrect {
             border-color: #dc3545;
             background: #f8d7da;
             color: #721c24;
+            animation: incorrectShake 0.6s ease-out;
         }
+        
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+            20%, 40%, 60%, 80% { transform: translateX(3px); }
+        }
+        
         .timer-warning {
-            animation: pulse 1s infinite;
+            animation: timerPulse 1s infinite;
         }
-        @keyframes pulse {
+        
+        @keyframes timerPulse {
+            0% { transform: scale(1); background-color: #dc3545; }
+            50% { transform: scale(1.1); background-color: #ff6b6b; }
+            100% { transform: scale(1); background-color: #dc3545; }
+        }
+        
+        .score-animation {
+            animation: scoreUp 0.8s ease-out;
+        }
+        
+        @keyframes scoreUp {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.3); color: #28a745; }
             100% { transform: scale(1); }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            animation: confetti-fall 3s linear infinite;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -66,31 +198,31 @@
 
     <main class="container mt-4">
         <!-- Welcome Screen -->
-        <div id="welcomeScreen" class="row justify-content-center">
+        <div id="welcomeScreen" class="row justify-content-center welcome-animation">
             <div class="col-md-8 col-lg-6">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center">
-                        <h2><i class="fas fa-cloud"></i> AWS Trivia Game</h2>
+                        <h2><i class="fas fa-cloud icon-bounce"></i> AWS Trivia Game</h2>
                         <p class="mb-0">Test your Amazon Web Services knowledge!</p>
                     </div>
                     <div class="card-body">
                         <div class="text-center mb-4">
-                            <i class="fas fa-user fa-3x text-primary mb-3"></i>
+                            <i class="fas fa-user fa-3x text-primary mb-3 icon-bounce"></i>
                             <h4>Single Player Mode</h4>
                             <p class="text-muted">Challenge yourself with AWS trivia questions</p>
                         </div>
 
                         <div class="row text-center mb-4">
                             <div class="col-4">
-                                <i class="fas fa-clock text-warning fa-2x"></i>
+                                <i class="fas fa-clock text-warning fa-2x icon-bounce"></i>
                                 <p class="small mt-2">15 seconds per question</p>
                             </div>
                             <div class="col-4">
-                                <i class="fas fa-trophy text-success fa-2x"></i>
+                                <i class="fas fa-trophy text-success fa-2x icon-bounce"></i>
                                 <p class="small mt-2">Track your score</p>
                             </div>
                             <div class="col-4">
-                                <i class="fas fa-aws text-info fa-2x"></i>
+                                <i class="fab fa-aws text-info fa-2x icon-bounce"></i>
                                 <p class="small mt-2">AWS focused questions</p>
                             </div>
                         </div>
@@ -102,11 +234,23 @@
                                        placeholder="Your name" maxlength="20" required>
                             </div>
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-lg pulse-button">
                                     <i class="fas fa-play"></i> Start Game
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- QR Code Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-qrcode"></i> Quick Access</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-3">Scan to play on your mobile device!</p>
+                        <div id="qrcode" class="qr-code d-inline-block"></div>
+                        <p class="small text-muted mt-2">Share this QR code with friends to play together!</p>
                     </div>
                 </div>
 
@@ -233,7 +377,25 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="questions.js"></script>
     <script src="game.js"></script>
+    
+    <script>
+        // Generate QR Code for current page
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUrl = window.location.href;
+            QRCode.toCanvas(document.getElementById('qrcode'), currentUrl, {
+                width: 150,
+                height: 150,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                margin: 2
+            }, function (error) {
+                if (error) console.error(error);
+                console.log('QR code generated successfully!');
+            });
+        });
+    </script>
 </body>
 </html>
