@@ -357,6 +357,7 @@ def handle_test_message(data):
     emit('connected', {'message': 'Test message received!'})
 
 if __name__ == '__main__':
-    print("Starting AWS Trivia Game Web Server...")
-    print("Access the game at: http://localhost:5000")
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    import os
+    port = int(os.environ.get('PORT', 8080))
+    print(f"Starting AWS Trivia Game Web Server on port {port}...")
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
