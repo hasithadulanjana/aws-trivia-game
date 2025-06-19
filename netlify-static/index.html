@@ -245,12 +245,20 @@
                 <!-- QR Code Section -->
                 <div class="card mt-4">
                     <div class="card-header">
-                        <h5><i class="fas fa-qrcode"></i> Quick Access</h5>
+                        <h5><i class="fas fa-qrcode"></i> Quick Mobile Access</h5>
                     </div>
                     <div class="card-body text-center">
                         <p class="mb-3">Scan to play on your mobile device!</p>
-                        <div id="qrcode" class="qr-code d-inline-block"></div>
-                        <p class="small text-muted mt-2">Share this QR code with friends to play together!</p>
+                        <div id="qrcode" class="qr-code d-inline-block mb-3"></div>
+                        <div class="d-grid gap-2">
+                            <a href="https://aws-trivia-game.netlify.app/" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-external-link-alt"></i> Open in New Tab
+                            </a>
+                            <button onclick="copyGameUrl()" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-copy"></i> Copy Link
+                            </button>
+                        </div>
+                        <p class="small text-muted mt-2">Share this link with friends to play together!</p>
                     </div>
                 </div>
 
@@ -401,18 +409,66 @@
     <script src="game.js"></script>
     
     <script>
-        // Generate QR Code for current page
+        // Copy game URL to clipboard
+        function copyGameUrl() {
+            const gameUrl = 'https://aws-trivia-game.netlify.app/';
+            navigator.clipboard.writeText(gameUrl).then(function() {
+                // Show success message
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                // Fallback for older browsers
+                alert('Game URL: https://aws-trivia-game.netlify.app/');
+            });
+        }
+        
+        // Generate QR Code for Netlify deployment
         document.addEventListener('DOMContentLoaded', function() {
-            const currentUrl = window.location.href;
-            QRCode.toCanvas(document.getElementById('qrcode'), currentUrl, {
+            const gameUrl = 'https://aws-trivia-game.netlify.app/';
+            
+            // Create QR code canvas element
+            const qrContainer = document.getElementById('qrcode');
+            const canvas = document.createElement('canvas');
+            qrContainer.appendChild(canvas);
+            
+            QRCode.toCanvas(canvas, gameUrl, {
                 width: 150,
                 height: 150,
                 colorDark: '#000000',
                 colorLight: '#ffffff',
-                margin: 2
+                margin: 2,
+                errorCorrectionLevel: 'M'
             }, function (error) {
-                if (error) console.error(error);
-                console.log('QR code generated successfully!');
+                if (error) {
+                    console.error('QR Code generation error:', error);
+                    // Fallback: show URL as text
+                    qrContainer.innerHTML = `
+                        <div class="text-center">
+                            <p class="small text-muted">QR Code not available</p>
+                            <a href="${gameUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Open Game
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    console.log('QR code generated successfully for:', gameUrl);
+                    
+                    // Add URL text below QR code
+                    const urlText = document.createElement('p');
+                    urlText.className = 'small text-muted mt-2 mb-0';
+                    urlText.innerHTML = `<a href="${gameUrl}" target="_blank">${gameUrl}</a>`;
+                    qrContainer.appendChild(urlText);
+                }
             });
         });
     </script>
