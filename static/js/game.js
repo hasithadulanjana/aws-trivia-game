@@ -123,6 +123,11 @@ class TriviaGameClient {
         this.socket.on('question_timeout', (data) => this.onQuestionTimeout(data));
         this.socket.on('leaderboard_update', (data) => this.updateLeaderboard(data));
         this.socket.on('game_over', (data) => this.onGameOver(data));
+        
+        // Level progression events
+        this.socket.on('available_levels', (data) => this.displayAvailableLevels(data));
+        this.socket.on('level_advanced', (data) => this.handleLevelAdvanced(data));
+        this.socket.on('game_started', (data) => this.showTemporaryMessage(data.message, 'success'));
     }
     
     onConnect() {
@@ -412,12 +417,23 @@ class TriviaGameClient {
         this.elements.winnerText.innerHTML = `<i class="fas fa-crown"></i> Winner: ${data.winner}`;
         this.elements.gameDuration.textContent = `Game duration: ${data.game_duration}`;
         
+        // Show level information
+        if (data.level_name) {
+            const levelInfo = document.createElement('p');
+            levelInfo.className = 'text-muted mb-2';
+            levelInfo.innerHTML = `<i class="fas fa-layer-group"></i> Level ${data.current_level}: ${data.level_name}`;
+            this.elements.gameDuration.parentNode.insertBefore(levelInfo, this.elements.gameDuration.nextSibling);
+        }
+        
         // Update final leaderboard
         this.updateLeaderboard({ leaderboard: data.final_scores });
         
         // Prepare player data for social sharing
         const playerData = this.calculatePlayerStats(data);
         this.displayGameResults(playerData);
+        
+        // Handle level progression for perfect scores
+        this.handleLevelProgression(data);
     }
     
     calculatePlayerStats(gameData) {
@@ -446,7 +462,9 @@ class TriviaGameClient {
             total: total,
             accuracy: accuracy,
             rank: rank,
-            totalPlayers: gameData.final_scores.length
+            totalPlayers: gameData.final_scores.length,
+            level: gameData.current_level || 1,
+            levelName: gameData.level_name || 'AWS Fundamentals'
         };
     }
     
@@ -467,6 +485,202 @@ class TriviaGameClient {
         
         // Reset leaderboard
         this.elements.leaderboard.innerHTML = '<p class="text-muted text-center">Game not started</p>';
+        
+        // Hide level progression section
+        const levelProgressionSection = document.getElementById('levelProgressionSection');
+        if (levelProgressionSection) {
+            levelProgressionSection.style.display = 'none';
+        }
+    }
+    
+    // Level Progression Methods
+    handleLevelProgression(gameData) {
+        const levelProgressionSection = document.getElementById('levelProgressionSection');
+        const perfectScorePlayers = gameData.perfect_score_players || [];
+        const currentPlayerPerfect = perfectScorePlayers.find(p => p.nickname === this.nickname);
+        
+        if (currentPlayerPerfect && currentPlayerPerfect.can_advance) {
+            // Show level progression section
+            levelProgressionSection.style.display = 'block';
+            levelProgressionSection.classList.add('level-progression-card', 'perfect-score-celebration');
+            
+            // Update level progression info
+            const unlockMessage = document.querySelector('#levelUnlockMessage p');
+            const currentLevelDisplay = document.getElementById('currentLevelDisplay');
+            const currentLevelName = document.getElementById('currentLevelName');
+            const nextLevelDisplay = document.getElementById('nextLevelDisplay');
+            const nextLevelName = document.getElementById('nextLevelName');
+            const advanceBtn = document.getElementById('advanceToNextLevelBtn');
+            
+            if (unlockMessage) {
+                unlockMessage.textContent = gameData.unlock_message || 'Perfect score! You can advance to the next level!';
+            }
+            
+            if (currentLevelDisplay) {
+                currentLevelDisplay.textContent = `Level ${gameData.current_level}`;
+            }
+            
+            if (currentLevelName) {
+                currentLevelName.textContent = gameData.level_name || '';
+            }
+            
+            if (gameData.next_level_info) {
+                if (nextLevelDisplay) {
+                    nextLevelDisplay.textContent = `Level ${gameData.next_level_info.level}`;
+                }
+                if (nextLevelName) {
+                    nextLevelName.textContent = gameData.next_level_info.name || '';
+                }
+                if (advanceBtn) {
+                    advanceBtn.style.display = 'block';
+                }
+            } else {
+                // All levels completed
+                if (nextLevelDisplay) {
+                    nextLevelDisplay.textContent = '🏆 Master';
+                }
+                if (nextLevelName) {
+                    nextLevelName.textContent = 'All levels completed!';
+                }
+                if (advanceBtn) {
+                    advanceBtn.style.display = 'none';
+                }
+            }
+            
+            // Add event listeners for level progression
+            this.initializeLevelProgressionEvents();
+        } else {
+            levelProgressionSection.style.display = 'none';
+        }
+    }
+    
+    initializeLevelProgressionEvents() {
+        const advanceBtn = document.getElementById('advanceToNextLevelBtn');
+        const viewLevelsBtn = document.getElementById('viewLevelsBtn');
+        
+        if (advanceBtn) {
+            advanceBtn.addEventListener('click', () => this.advanceToNextLevel());
+        }
+        
+        if (viewLevelsBtn) {
+            viewLevelsBtn.addEventListener('click', () => this.showLevelSelection());
+        }
+    }
+    
+    advanceToNextLevel() {
+        if (this.socket) {
+            this.socket.emit('advance_to_next_level');
+        }
+    }
+    
+    showLevelSelection() {
+        if (this.socket) {
+            this.socket.emit('get_available_levels');
+        }
+    }
+    
+    displayAvailableLevels(data) {
+        const levelsList = document.getElementById('levelsList');
+        const modal = new bootstrap.Modal(document.getElementById('levelSelectionModal'));
+        
+        if (!levelsList) return;
+        
+        levelsList.innerHTML = '';
+        
+        data.levels.forEach(level => {
+            const levelCard = document.createElement('div');
+            levelCard.className = 'col-md-6 mb-3';
+            
+            let cardClass = 'level-card card h-100';
+            let badgeClass = 'level-badge';
+            let badgeIcon = '';
+            
+            if (level.completed) {
+                cardClass += ' completed';
+                badgeClass += ' completed';
+                badgeIcon = '✓';
+            } else if (level.level === data.current_level) {
+                cardClass += ' current';
+                badgeClass += ' current';
+                badgeIcon = '▶';
+            } else if (level.unlocked) {
+                cardClass += ' unlocked';
+            } else {
+                cardClass += ' locked';
+                badgeClass += ' locked';
+                badgeIcon = '🔒';
+            }
+            
+            const difficultyClass = `difficulty-${level.name.toLowerCase().split(' ')[1] || 'beginner'}`;
+            
+            levelCard.innerHTML = `
+                <div class="${cardClass}" ${level.unlocked ? 'onclick="game.startLevel(' + level.level + ')"' : ''}>
+                    <div class="card-body position-relative">
+                        <div class="${badgeClass}">${badgeIcon}</div>
+                        <h5 class="card-title">Level ${level.level}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">${level.name}</h6>
+                        <p class="card-text">${level.description}</p>
+                        <div class="level-difficulty ${difficultyClass}">
+                            ${level.name.split(' ')[1] || 'Beginner'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            levelsList.appendChild(levelCard);
+        });
+        
+        modal.show();
+    }
+    
+    startLevel(level) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('levelSelectionModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        if (this.socket && this.isHost) {
+            this.socket.emit('start_level', { level: level });
+        } else if (!this.isHost) {
+            this.showTemporaryMessage('Only the host can start a new level', 'warning');
+        }
+    }
+    
+    handleLevelAdvanced(data) {
+        this.showTemporaryMessage(data.message, 'success', 5000);
+        
+        // Update UI for new level
+        const levelProgressionSection = document.getElementById('levelProgressionSection');
+        if (levelProgressionSection) {
+            levelProgressionSection.style.display = 'none';
+        }
+        
+        // Show level unlock animation
+        this.showLevelUnlockAnimation(data.new_level, data.level_info);
+    }
+    
+    showLevelUnlockAnimation(level, levelInfo) {
+        // Create level unlock notification
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success level-unlock-animation';
+        notification.innerHTML = `
+            <div class="text-center">
+                <h4><i class="fas fa-star"></i> Level ${level} Unlocked!</h4>
+                <h5>${levelInfo.name}</h5>
+                <p>${levelInfo.description}</p>
+            </div>
+        `;
+        
+        // Insert at the top of the game area
+        const gameArea = document.querySelector('.col-lg-8');
+        gameArea.insertBefore(notification, gameArea.firstChild);
+        
+        // Auto-remove after animation
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 4000);
     }
     
     showError(message) {
@@ -678,7 +892,7 @@ class TriviaGameClient {
     }
     
     generateShareText(playerData) {
-        const { score, correct, total, accuracy, rank, totalPlayers } = playerData;
+        const { score, correct, total, accuracy, rank, totalPlayers, level, levelName } = playerData;
         const gameUrl = window.location.origin;
         
         // Generate achievement badge text
@@ -707,13 +921,25 @@ class TriviaGameClient {
             }
         }
         
-        const shareText = `🎮 Just completed the AWS Trivia Game! ${achievement}
+        // Add perfect score celebration
+        let perfectScoreText = '';
+        if (accuracy === 100) {
+            perfectScoreText = '🎯 PERFECT SCORE! ';
+        }
+        
+        const shareText = `🎮 Just completed the AWS Trivia Game! ${perfectScoreText}${achievement}
         
 📊 My Results:
+• Level: ${level} - ${levelName || 'AWS Knowledge'}
 • Score: ${score} points
 • Correct Answers: ${correct}/${total}
 • Accuracy: ${accuracy}%
 ${rankText ? '• ' + rankText : ''}
+
+Test your AWS knowledge too! 🚀
+${gameUrl}
+
+#AWS #CloudComputing #TriviaGame #AWSCommunity #TechSkills`;
 
 Test your AWS knowledge too! 🚀
 ${gameUrl}

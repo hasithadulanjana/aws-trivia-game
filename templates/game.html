@@ -161,6 +161,72 @@
                     </div>
                 </div>
 
+                <!-- Level Progression Section -->
+                <div id="levelProgressionSection" class="card mb-4" style="display: none;">
+                    <div class="card-header bg-warning text-dark">
+                        <h5><i class="fas fa-star"></i> Perfect Score Achievement!</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="levelUnlockMessage" class="mb-3">
+                            <p class="text-success font-weight-bold"></p>
+                        </div>
+                        
+                        <!-- Current Level Info -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Current Level</h6>
+                                        <h4 id="currentLevelDisplay" class="text-primary">Level 1</h4>
+                                        <p id="currentLevelName" class="text-muted mb-0">AWS Fundamentals</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Next Level</h6>
+                                        <h4 id="nextLevelDisplay" class="text-success">Level 2</h4>
+                                        <p id="nextLevelName" class="text-muted mb-0">AWS Intermediate</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Level Progression Actions -->
+                        <div class="d-grid gap-2">
+                            <button id="advanceToNextLevelBtn" class="btn btn-success btn-lg">
+                                <i class="fas fa-arrow-up"></i> Advance to Next Level
+                            </button>
+                            <button id="viewLevelsBtn" class="btn btn-outline-info">
+                                <i class="fas fa-list"></i> View All Levels
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level Selection Modal -->
+                <div class="modal fade" id="levelSelectionModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-layer-group"></i> AWS Knowledge Levels
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="levelsList" class="row">
+                                    <!-- Levels will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Game Actions -->
                 <div class="mt-3">
                     <button id="newGameBtn" class="btn btn-primary me-2">
