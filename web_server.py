@@ -2,6 +2,7 @@
 """
 AWS Trivia Game Web Server
 Flask-based web interface with Socket.IO for real-time multiplayer
+Multi-level progression system with difficulty-based questions
 """
 
 from flask import Flask, render_template, request
@@ -11,7 +12,7 @@ import time
 import random
 import threading
 from datetime import datetime
-from questions import questions
+from questions_levels import levels, get_questions_for_level, get_level_info, get_max_level
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'aws-trivia-game-secret-key'
@@ -24,10 +25,10 @@ WAIT_TIME_BETWEEN_QUESTIONS = 3  # seconds
 QUESTIONS_PER_GAME = 10
 
 class WebTriviaGame:
-    """Manages the web-based trivia game state"""
+    """Manages the web-based trivia game state with level progression"""
     
     def __init__(self):
-        self.players = {}  # {session_id: {nickname, score, answered_current}}
+        self.players = {}  # {session_id: {nickname, score, answered_current, level, total_correct}}
         self.game_in_progress = False
         self.current_question_index = 0
         self.current_question = None
@@ -36,8 +37,9 @@ class WebTriviaGame:
         self.host_session = None
         self.answered_current_question = set()
         self.game_start_time = None
+        self.current_level = 1  # Start at level 1
         
-    def add_player(self, session_id, nickname):
+    def add_player(self, session_id, nickname, level=1):
         """Add a new player to the game"""
         if len(self.players) >= MAX_PLAYERS:
             return False, "Game is full"
@@ -51,7 +53,10 @@ class WebTriviaGame:
             'nickname': nickname,
             'score': 0,
             'answered_current': False,
-            'connected_at': datetime.now()
+            'connected_at': datetime.now(),
+            'level': level,
+            'total_correct': 0,
+            'level_progress': {i: False for i in range(1, get_max_level() + 1)}  # Track completed levels
         }
         
         # First player becomes the host
@@ -73,8 +78,8 @@ class WebTriviaGame:
             return nickname
         return None
     
-    def start_game(self, session_id):
-        """Start the game (host only)"""
+    def start_game(self, session_id, level=None):
+        """Start the game (host only) at specified level"""
         if session_id != self.host_session:
             print(f"Non-host {session_id} attempted to start game. Host is {self.host_session}")
             return False, "Only the host can start the game"
@@ -87,24 +92,48 @@ class WebTriviaGame:
             print(f"Game start attempted with insufficient players: {len(self.players)}")
             return False, "Need at least 1 player to start"
         
-        print(f"Host {session_id} starting game with {len(self.players)} players")
+        # Determine level to play
+        if level is None:
+            level = self.current_level
         
-        # Prepare questions
-        self.game_questions = random.sample(questions, min(len(questions), QUESTIONS_PER_GAME))
+        level_info = get_level_info(level)
+        if not level_info:
+            return False, f"Invalid level: {level}"
+        
+        print(f"Host {session_id} starting game at Level {level}: {level_info['name']} with {len(self.players)} players")
+        
+        # Prepare questions for the specified level
+        level_questions = get_questions_for_level(level)
+        if not level_questions:
+            return False, f"No questions available for level {level}"
+            
+        self.game_questions = random.sample(level_questions, min(len(level_questions), QUESTIONS_PER_GAME))
         self.game_in_progress = True
         self.current_question_index = 0
+        self.current_level = level
         self.game_start_time = datetime.now()
+        
+        # Reset player scores for new level
+        for player in self.players.values():
+            player['score'] = 0
+            player['total_correct'] = 0
+            player['answered_current'] = False
         
         # Start the game in a separate thread
         threading.Thread(target=self._run_game, daemon=True).start()
         
-        return True, "Game started"
+        return True, f"Game started at Level {level}: {level_info['name']}"
     
     def _run_game(self):
         """Run the game loop"""
+        level_info = get_level_info(self.current_level)
+        
         # Notify all players that game is starting
         socketio.emit('game_starting', {
-            'message': 'Game is starting!',
+            'message': f'Starting Level {self.current_level}: {level_info["name"]}!',
+            'level': self.current_level,
+            'level_name': level_info["name"],
+            'level_description': level_info["description"],
             'total_questions': len(self.game_questions)
         })
         
@@ -170,6 +199,7 @@ class WebTriviaGame:
         
         if correct:
             player['score'] += 1
+            player['total_correct'] += 1
         
         player['answered_current'] = True
         self.answered_current_question.add(session_id)
@@ -180,7 +210,9 @@ class WebTriviaGame:
             'correct_answer': self.current_question['answer'],
             'correct_option': self.current_question['options'][self.current_question['answer']],
             'your_answer': answer_index,
-            'your_option': self.current_question['options'][answer_index] if answer_index < len(self.current_question['options']) else 'Invalid'
+            'your_option': self.current_question['options'][answer_index] if answer_index < len(self.current_question['options']) else 'Invalid',
+            'question_category': self.current_question.get('category', 'General'),
+            'difficulty': self.current_question.get('difficulty', 'unknown')
         }, room=request.sid)
         
         # If all players answered, move to next question
@@ -206,20 +238,55 @@ class WebTriviaGame:
         })
     
     def _end_game(self):
-        """End the game"""
+        """End the game and check for level progression"""
         leaderboard = sorted(
-            [(p['nickname'], p['score']) for p in self.players.values()],
+            [(p['nickname'], p['score'], p['total_correct']) for p in self.players.values()],
             key=lambda x: x[1],
             reverse=True
         )
         
         winner = leaderboard[0] if leaderboard else None
+        level_info = get_level_info(self.current_level)
         
-        socketio.emit('game_over', {
+        # Check for perfect scores and level progression
+        perfect_score_players = []
+        for session_id, player in self.players.items():
+            if player['total_correct'] == len(self.game_questions):  # 100% accuracy
+                perfect_score_players.append({
+                    'session_id': session_id,
+                    'nickname': player['nickname'],
+                    'can_advance': self.current_level < get_max_level()
+                })
+                # Mark current level as completed
+                player['level_progress'][self.current_level] = True
+        
+        # Prepare game over data
+        game_over_data = {
             'winner': winner[0] if winner else 'No winner',
-            'final_scores': leaderboard,
-            'game_duration': str(datetime.now() - self.game_start_time).split('.')[0] if self.game_start_time else 'Unknown'
-        })
+            'final_scores': [{'nickname': score[0], 'score': score[1], 'correct_answers': score[2]} for score in leaderboard],
+            'game_duration': str(datetime.now() - self.game_start_time).split('.')[0] if self.game_start_time else 'Unknown',
+            'current_level': self.current_level,
+            'level_name': level_info['name'],
+            'level_description': level_info['description'],
+            'total_questions': len(self.game_questions),
+            'perfect_score_players': perfect_score_players,
+            'next_level_available': self.current_level < get_max_level()
+        }
+        
+        # Add level progression messages for perfect score players
+        if perfect_score_players:
+            if self.current_level < get_max_level():
+                next_level_info = get_level_info(self.current_level + 1)
+                game_over_data['next_level_info'] = {
+                    'level': self.current_level + 1,
+                    'name': next_level_info['name'],
+                    'description': next_level_info['description']
+                }
+                game_over_data['unlock_message'] = level_info.get('unlock_message', 'Great job! Ready for the next level?')
+            else:
+                game_over_data['unlock_message'] = level_info.get('unlock_message', 'Congratulations! You have mastered all levels!')
+        
+        socketio.emit('game_over', game_over_data)
         
         # Reset game state
         self.game_in_progress = False
@@ -228,9 +295,10 @@ class WebTriviaGame:
         self.game_questions = []
         self.answered_current_question = set()
         
-        # Reset player scores
+        # Reset player scores but keep level progress
         for player in self.players.values():
             player['score'] = 0
+            player['total_correct'] = 0
             player['answered_current'] = False
     
     def get_game_state(self):
@@ -349,6 +417,80 @@ def handle_submit_answer(data):
 def handle_get_game_state():
     """Send current game state to requesting client"""
     emit('game_state', game.get_game_state())
+
+@socketio.on('start_level')
+def handle_start_level(data):
+    """Handle starting a specific level"""
+    level = data.get('level', 1)
+    success, message = game.start_game(request.sid, level)
+    
+    if success:
+        emit('game_started', {'message': message}, broadcast=True)
+        print(f"Level {level} started successfully by {request.sid}")
+    else:
+        emit('error', {'message': message})
+        print(f"Failed to start level {level}: {message}")
+
+@socketio.on('get_available_levels')
+def handle_get_available_levels():
+    """Send available levels to client"""
+    player = game.players.get(request.sid)
+    if not player:
+        emit('error', {'message': 'Player not found'})
+        return
+    
+    available_levels = []
+    for level_num in range(1, get_max_level() + 1):
+        level_info = get_level_info(level_num)
+        is_unlocked = level_num == 1 or player['level_progress'].get(level_num - 1, False)
+        is_completed = player['level_progress'].get(level_num, False)
+        
+        available_levels.append({
+            'level': level_num,
+            'name': level_info['name'],
+            'description': level_info['description'],
+            'unlocked': is_unlocked,
+            'completed': is_completed
+        })
+    
+    emit('available_levels', {
+        'levels': available_levels,
+        'current_level': game.current_level,
+        'max_level': get_max_level()
+    })
+
+@socketio.on('advance_to_next_level')
+def handle_advance_to_next_level():
+    """Handle advancing to next level after perfect score"""
+    player = game.players.get(request.sid)
+    if not player:
+        emit('error', {'message': 'Player not found'})
+        return
+    
+    # Check if player can advance
+    current_level_completed = player['level_progress'].get(game.current_level, False)
+    next_level = game.current_level + 1
+    
+    if not current_level_completed:
+        emit('error', {'message': 'You must complete the current level with 100% to advance'})
+        return
+    
+    if next_level > get_max_level():
+        emit('error', {'message': 'You have already completed all levels!'})
+        return
+    
+    # Start next level
+    success, message = game.start_game(request.sid, next_level)
+    
+    if success:
+        emit('level_advanced', {
+            'message': message,
+            'new_level': next_level,
+            'level_info': get_level_info(next_level)
+        }, broadcast=True)
+        print(f"Advanced to level {next_level} by {request.sid}")
+    else:
+        emit('error', {'message': message})
 
 @socketio.on('test_message')
 def handle_test_message(data):
